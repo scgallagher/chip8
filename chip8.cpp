@@ -1,5 +1,8 @@
 #include <iostream>
+#include <gtkmm/application.h>
+#include <thread>
 #include "emulator.h"
+#include "display.h"
 
 Emulator emulator;
 
@@ -21,12 +24,22 @@ void drawGraphics(){
     emulator.drawFlag = false;
 }
 
+void launchDisplay(int argc, char **argv) {
+    auto app = Gtk::Application::create(argc, argv, "org.gtkmm.example");
+
+  Display display;
+
+  app->run(display);
+}
+
 int main(int argc, char **argv) {
     initializeGraphics();
     initializeInput();
 
     emulator.initialize();
     emulator.loadProgram("tetris");
+
+	std::thread displayThread(launchDisplay, argc, argv);
 
     for(int i = 0; i < 1; i++) {
         emulator.cycle();
@@ -37,5 +50,8 @@ int main(int argc, char **argv) {
 
         emulator.setKeys();
     }
-    return 0;
+    
+	displayThread.join();
+
+	return 0;
 }
