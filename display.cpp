@@ -17,8 +17,3 @@ Display::Display() {
 Display::~Display()
 {
 }
-
-// void Display::on_button_clicked()
-// {
-//   std::cout << "Step" << std::endl;
-// }

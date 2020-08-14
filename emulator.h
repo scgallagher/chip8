@@ -72,6 +72,8 @@ class Emulator {
         void updateGraphicsBuffer();
         void skipInstructionIfKeyPressed();
         void skipInstructionIfKeyNotPressed();
+
+        void printInstruction(std::string);
 };
 
 #endif
