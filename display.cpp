@@ -1,21 +1,16 @@
 #include "display.h"
 #include <iostream>
 
-Display::Display()
-: m_button("Step")   // creates a new button with label "Hello World".
-{
-  // Sets the border width of the window.
+Display::Display() {
   set_border_width(50);
 
-  // When the button receives the "clicked" signal, it will call the
-  // on_button_clicked() method defined below.
+	m_button.set_label("Step");
+
   m_button.signal_clicked().connect(sigc::mem_fun(*this,
               &Display::on_button_clicked));
 
-  // This packs the button into the Window (a container).
   add(m_button);
 
-  // The final step is to display this newly created widget...
   m_button.show();
 }
 
@@ -23,7 +18,7 @@ Display::~Display()
 {
 }
 
-void Display::on_button_clicked()
-{
-  std::cout << "Step" << std::endl;
-}
+// void Display::on_button_clicked()
+// {
+//   std::cout << "Step" << std::endl;
+// }

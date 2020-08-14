@@ -32,6 +32,18 @@ void launchDisplay(int argc, char **argv) {
   app->run(display);
 }
 
+void Display::on_button_clicked() {
+    std::cout << "Step" << std::endl;
+
+    emulator.cycle();
+
+    if(emulator.drawFlag) {
+        //drawGraphics();
+    }
+
+    emulator.setKeys();
+}
+
 int main(int argc, char **argv) {
     initializeGraphics();
     initializeInput();
@@ -40,16 +52,6 @@ int main(int argc, char **argv) {
     emulator.loadProgram("tetris");
 
 	std::thread displayThread(launchDisplay, argc, argv);
-
-    for(int i = 0; i < 1; i++) {
-        emulator.cycle();
-
-        if(emulator.drawFlag) {
-            drawGraphics();
-        }
-
-        emulator.setKeys();
-    }
     
 	displayThread.join();
 
