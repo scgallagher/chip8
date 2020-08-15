@@ -138,46 +138,56 @@ void Emulator::skipInstructionIfKeyNotPressed(){
     }
 }
 
+void Emulator::executeRegisterOperation() {
+    unsigned short index = (opcode & 0x000F);
+
+    void (Emulator::*opfunction)() = registerOpfunctions[index];
+
+    if (opfunction == nullptr) {
+        throw hexToString(opcode);
+    }
+    else {
+        (this->*opfunction)();
+    }
+}
+
+void Emulator::executeInputOperation() {
+    unsigned short index = (opcode & 0x00FF);
+
+    void (Emulator::*opfunction)() = inputOpfunctions[index];
+
+    if (opfunction == nullptr) {
+        throw hexToString(opcode);
+    }
+    else {
+        (this->*opfunction)();
+    }
+}
+
+void Emulator::executeMiscOperation() {
+    unsigned short index = (opcode & 0x00FF);
+
+    void (Emulator::*opfunction)() = miscOpfunctions[index];
+
+    if (opfunction == nullptr) {
+        throw hexToString(opcode);
+    }
+    else {
+        (this->*opfunction)();
+    }
+}
+
 void Emulator::cycle() {
     opcode = memory[pc] << 8 | memory[pc + 1];
 
-    // Decode opcode
-    switch(opcode & 0xF000) {
-        case 0xA000:
-            Emulator::setIndexRegister();
-        break;
-        case 0x2000:
-            Emulator::callSubroutine();
-        break;
-        case 0x8000:
-            switch (opcode & 0x000F) {
-                case 0x0004:
-                    Emulator::addRegisters();
-                break;
-            }
-        break;
-        case 0xD000:
-            Emulator::updateGraphicsBuffer();
-        break;
-        case 0xE000:
-            switch (opcode & 0x00FF) {
-                case 0x009E:
-                    Emulator::skipInstructionIfKeyPressed();
-                break;
-                case 0x00A1:
-                    Emulator::skipInstructionIfKeyNotPressed();
-                break;
-            }
-        break;
-        case 0xF000:
-            switch (opcode & 0x00FF) {
-                case 0x0033:
-                    Emulator::storeBinaryCodedDecimal();       
-                break;
-            }
-        break;
-        default:
-            throw hexToString(opcode);
+    unsigned short index = opcode & 0xF000;
+    void (Emulator::*opfunction)() = opfunctions[index];
+
+    if (opfunction == nullptr) {
+        throw hexToString(opcode);
+    }
+    else {
+        (this->*opfunction)();
     }
 
     // Update timers
@@ -194,6 +204,24 @@ void Emulator::cycle() {
 
 Emulator::Emulator() {
     carryFlagIndex = 0xFF;
+
+    for (int i = 0; i < 0xF085; i++) {
+        opfunctions[i] == nullptr;
+    }
+
+    opfunctions[0xA000] = Emulator::setIndexRegister;
+    opfunctions[0x2000] = Emulator::callSubroutine;
+    opfunctions[0x8000] = Emulator::executeRegisterOperation;
+    opfunctions[0xD000] = Emulator::updateGraphicsBuffer;
+    opfunctions[0xE000] = Emulator::executeInputOperation;
+    opfunctions[0xF000] = Emulator::executeMiscOperation;
+
+    registerOpfunctions[0x4] = Emulator::addRegisters;
+
+    inputOpfunctions[0x9E] = Emulator::skipInstructionIfKeyPressed;
+    inputOpfunctions[0xA1] = Emulator::skipInstructionIfKeyNotPressed;
+
+    miscOpfunctions[0x33] = Emulator::storeBinaryCodedDecimal;
 }
 
 void Emulator::clearRegisters() {
@@ -224,7 +252,7 @@ void Emulator::initialize() {
 void Emulator::loadProgram(std::string program) {
     std::cout << "Loading program: " << program << "\n";
 
-    unsigned short op = 0xA123;
+    unsigned short op = 0xFA33;
     memory[pc] = op >> 8 & 0xFF;
     memory[pc + 1] = op & 0xFF;
 }

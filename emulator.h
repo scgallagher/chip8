@@ -60,20 +60,32 @@ class Emulator {
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F
         };
 
+        void (Emulator::*opfunctions[0xF085])();
+        void (Emulator::*registerOpfunctions[0xE])();
+        void (Emulator::*inputOpfunctions[0xA1])();
+        void (Emulator::*miscOpfunctions[0x65])();
+
     private:
         unsigned char carryFlagIndex;
 
         void clearRegisters();
+        void printInstruction(std::string);
 
         void setIndexRegister();
+
         void callSubroutine();
+
+        void executeRegisterOperation();
         void addRegisters();
-        void storeBinaryCodedDecimal();
+
         void updateGraphicsBuffer();
+
+        void executeInputOperation();
         void skipInstructionIfKeyPressed();
         void skipInstructionIfKeyNotPressed();
-
-        void printInstruction(std::string);
+        
+        void executeMiscOperation();
+        void storeBinaryCodedDecimal();
 };
 
 #endif
