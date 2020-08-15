@@ -4,22 +4,31 @@
 #include "emulator.h"
 
 void initializeGraphics(){
-    std::cout << "Initializing graphics\n";
+    // Todo
 }
 
 void initializeInput(){
-    std::cout << "Initializing input\n";
+    // Todo
+}
+
+std::string hexToString(unsigned short hexCode, bool includePrefix) {
+    std::stringstream ss;
+    ss << std::hex << hexCode;
+    std::string hexString = boost::to_upper_copy<std::string>(ss.str());
+
+    if (includePrefix) {
+        hexString = "0x" + hexString;
+    }
+
+    return hexString;
 }
 
 std::string hexToString(unsigned short hexCode) {
-    std::stringstream ss;
-    ss << std::hex << hexCode;
-    std::string hexString = ss.str();
-    return boost::to_upper_copy<std::string>(hexString);
+    return hexToString(hexCode, true);
 }
 
 void Emulator::printInstruction(std::string instruction) {
-    std::cout << "0x" << hexToString(opcode) << " " << instruction << std::endl;
+    std::cout << hexToString(pc) << ": " << hexToString(opcode) << " " << instruction << std::endl;
 }
 
 // 0xANNN: Set I to the address NNN
@@ -37,15 +46,18 @@ void Emulator::callSubroutine() {
     ++sp;
 
     unsigned short subroutineAddress = opcode & 0x0FFF;
-    pc = subroutineAddress; 
-
     printInstruction("CALL " + hexToString(subroutineAddress));
+    
+    pc = subroutineAddress; 
 }
 
 // 0x8XY4: Add value of register Y to register X
 void Emulator::addRegisters() {
     int xRegisterIndex = (opcode & 0x0F00) >> 8;
     int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "ADD V" + hexToString(xRegisterIndex, false) + ", V" + hexToString(yRegisterIndex, false);
+    printInstruction(instruction);
 
     if (V[yRegisterIndex] > (0xFF - V[xRegisterIndex])) {
         V[carryFlagIndex] = 1; // Set the carry flag
@@ -56,21 +68,18 @@ void Emulator::addRegisters() {
 
     V[xRegisterIndex] += V[yRegisterIndex];
 
-    std::string instruction =  "ADD V" + hexToString(xRegisterIndex) + ", V" + hexToString(yRegisterIndex);
-    printInstruction(instruction);
-
     pc += 2;
 }
 
 // 0xFX33: Store binary-coded decimal representation of VX
 void Emulator::storeBinaryCodedDecimal() {
     unsigned short vIndex = (opcode & 0x0F00) >> 8;
+    printInstruction("LD B, V" + hexToString(vIndex, false));
+
     memory[I] = V[vIndex] / 100;
     memory[I + 1] = (V[vIndex] / 10) % 10;
     memory[I + 2] = (V[vIndex] % 10) % 10;
 
-    std::cout << "Stored decimal: " << +memory[I] << +memory[I + 1] << +memory[I + 2] << "\n";
-    printInstruction("LD B, V" + hexToString(vIndex));
     pc += 2;
 }
 
@@ -83,6 +92,9 @@ void Emulator::updateGraphicsBuffer() {
     unsigned short height = opcode & 0x000F;
     unsigned short pixel;
 
+    std::string instruction = "DRW V" + hexToString(xIndex, false) + ", V" + hexToString(yIndex, false) + ", " + hexToString(height);
+    printInstruction(instruction);
+    
     V[0xF] = 0;
     for (int yline = 0; yline < height; yline++) {
         pixel = memory[I + yline];
@@ -96,9 +108,6 @@ void Emulator::updateGraphicsBuffer() {
         }
     }
 
-    std::string instruction = "DRW V" + hexToString(xIndex) + ", V" + hexToString(yIndex) + ", " + hexToString(height);
-    printInstruction(instruction);
-
     drawFlag = true;
     pc += 2;
 }
@@ -106,28 +115,27 @@ void Emulator::updateGraphicsBuffer() {
 // 0xEX9E: Skip next instruction if key stored in V[X] is pressed
 void Emulator::skipInstructionIfKeyPressed() {
     unsigned short index = (opcode & 0x0F00) >> 8;
+    printInstruction("SKP V" + hexToString(index, false));
+    
     if (key[V[index]] != 0) {
         pc += 4;
     }
     else {
         pc += 2;
     }
-    
-    printInstruction("SKP V" + hexToString(index));
 }
 
 // 0xEXA1: Skip next instruction if key stored in V[X] is NOT pressed
 void Emulator::skipInstructionIfKeyNotPressed(){
-    std::cout << "here" << std::endl;
     unsigned short index = (opcode & 0x0F00) >> 8;
+    printInstruction("SKNP V" + hexToString(index, false));
+    
     if (key[V[index]] == 0) {
         pc += 4;
     }
     else {
         pc += 2;
     }
-
-    printInstruction("SKNP V" + hexToString(index));
 }
 
 void Emulator::cycle() {
@@ -168,18 +176,8 @@ void Emulator::cycle() {
                 break;
             }
         break;
-        case 0x0000:
-            switch (opcode & 0x000F) {
-                case 0x0000:
-                    std::cout << "Executing 0x00E0: Clear the screen\n";
-                break;
-                case 0x000E:
-                    std::cout << "Executing 0x00EE: Return from subroutine\n";
-                break;
-            }
-        break;
         default:
-            std::cout << "Unknown opcode: 0x" << std::hex << opcode << "\n";
+            throw hexToString(opcode);
     }
 
     // Update timers
@@ -205,8 +203,6 @@ void Emulator::clearRegisters() {
 }
 
 void Emulator::initialize() {
-    std::cout << "Initializing emulator\n";
-
     pc = 0x200;
     opcode = 0;
     I = 0;
@@ -228,7 +224,7 @@ void Emulator::initialize() {
 void Emulator::loadProgram(std::string program) {
     std::cout << "Loading program: " << program << "\n";
 
-    unsigned short op = 0xE9A1;
+    unsigned short op = 0xA123;
     memory[pc] = op >> 8 & 0xFF;
     memory[pc + 1] = op & 0xFF;
 }

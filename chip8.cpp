@@ -52,7 +52,13 @@ int main(int argc, char **argv) {
 	// std::thread displayThread(launchDisplay, argc, argv);
     
 	// displayThread.join();
-    emulator.cycle();
+    try {
+        emulator.cycle();
+    }
+    catch (std:: string opcode) {
+        std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+        return 1;
+    }
 
 	return 0;
 }
