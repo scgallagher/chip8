@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <fstream>
 #include <boost/algorithm/string.hpp>
 #include "emulator.h"
 
@@ -27,8 +28,23 @@ std::string hexToString(unsigned short hexCode) {
     return hexToString(hexCode, true);
 }
 
+std::string opcodeToString(unsigned short hexCode) {
+    std::string instruction = hexToString(hexCode, false);
+    if (instruction.length() == 2) {
+        instruction = "00" + instruction;
+    }
+    return "0x" + instruction;
+}
+
 void Emulator::printInstruction(std::string instruction) {
-    std::cout << hexToString(pc) << ": " << hexToString(opcode) << " " << instruction << std::endl;
+    std::cout << hexToString(pc) << ": " << opcodeToString(opcode) << " " << instruction << std::endl;
+}
+
+// 0x00EE: Return from subroutine
+void Emulator::returnFromSubroutine() {
+    printInstruction("RET");
+
+    pc = stack[sp--];
 }
 
 // 0xANNN: Set I to the address NNN
@@ -49,6 +65,17 @@ void Emulator::callSubroutine() {
     printInstruction("CALL " + hexToString(subroutineAddress));
     
     pc = subroutineAddress; 
+}
+
+// 0x6Xkk: Load the value kk into register VX
+void Emulator::loadRegister() {
+    unsigned short value = opcode & 0x00FF;
+    unsigned short registerIndex = opcode & 0x0F00;
+
+    printInstruction("LD V" + hexToString(false) + ", " + hexToString(value));
+    V[registerIndex] = value;
+
+    pc += 2;
 }
 
 // 0x8XY4: Add value of register Y to register X
@@ -138,6 +165,10 @@ void Emulator::skipInstructionIfKeyNotPressed(){
     }
 }
 
+void Emulator::executeSystemOperation() {
+    executeOperation(systemOpfunctions, 0x00FF);
+}
+
 void Emulator::executeRegisterOperation() {
     executeOperation(registerOpfunctions, 0x000F);
 }
@@ -152,7 +183,7 @@ void Emulator::executeOperation(void (Emulator::*opfunctions[])(), unsigned shor
     void (Emulator::*opfunction)() = opfunctions[index];
 
     if (opfunction == nullptr) {
-        throw hexToString(opcode);
+        throw opcodeToString(opcode);
     }
     else {
         (this->*opfunction)();
@@ -179,13 +210,17 @@ void Emulator::cycle() {
 Emulator::Emulator() {
     carryFlagIndex = 0xFF;
 
+    mainOpfunctions[0x0000] = &Emulator::executeSystemOperation;
     mainOpfunctions[0xA000] = &Emulator::setIndexRegister;
     mainOpfunctions[0x2000] = &Emulator::callSubroutine;
+    mainOpfunctions[0x6000] = &Emulator::loadRegister;
     mainOpfunctions[0x8000] = &Emulator::executeRegisterOperation;
     mainOpfunctions[0xD000] = &Emulator::updateGraphicsBuffer;
     mainOpfunctions[0xE000] = &Emulator::executeMiscOperation;
     mainOpfunctions[0xF000] = &Emulator::executeMiscOperation;
 
+    systemOpfunctions[0xEE] = &Emulator::returnFromSubroutine;
+    
     registerOpfunctions[0x4] = &Emulator::addRegisters;
 
     miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
@@ -218,12 +253,29 @@ void Emulator::initialize() {
     // Reset timers
 }
 
-void Emulator::loadProgram(std::string program) {
-    std::cout << "Loading program: " << program << "\n";
+void Emulator::loadProgram(std::string romFilePath) {
+    std::cout << "Loading program: " << romFilePath << "\n";
 
     unsigned short op = 0xF933;
     memory[pc] = op >> 8 & 0xFF;
     memory[pc + 1] = op & 0xFF;
+
+    std::ifstream romFile;
+    romFile.open(romFilePath, std::ios::in | std::ios::binary | std::ios::ate);
+    std::ios::streampos size = romFile.tellg();
+    char * fileContents = new char[size];
+    romFile.seekg(0, std::ios::beg);
+
+    romFile.read(fileContents, size);
+
+    romFile.close();
+
+    unsigned char *rom = new unsigned char[size];
+    rom = (unsigned char*) fileContents;
+    
+    for (int i = 0; i < size; i++) {
+        memory[0x200 + i] = rom[i];
+    }
 }
 
 void Emulator::setKeys() {

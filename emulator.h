@@ -60,6 +60,7 @@ class Emulator {
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F
         };
 
+        void (Emulator::*systemOpfunctions[0xEE])();
         void (Emulator::*mainOpfunctions[0xF085])();
         void (Emulator::*registerOpfunctions[0xE])();
         void (Emulator::*miscOpfunctions[0xA1])();
@@ -72,9 +73,14 @@ class Emulator {
 
         void executeOperation(void (Emulator::*[])(), unsigned short);
 
+        void executeSystemOperation();
+        void returnFromSubroutine();
+
         void setIndexRegister();
 
         void callSubroutine();
+
+        void loadRegister();
 
         void executeRegisterOperation();
         void addRegisters();

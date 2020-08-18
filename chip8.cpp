@@ -47,17 +47,24 @@ int main(int argc, char **argv) {
     initializeInput();
 
     emulator.initialize();
-    emulator.loadProgram("tetris");
+
+    std::string romFilePath = "roms/TETRIS";
+    if (argc > 1) {
+        romFilePath = argv[1];
+    }
+    emulator.loadProgram(romFilePath);
 
 	// std::thread displayThread(launchDisplay, argc, argv);
     
 	// displayThread.join();
-    try {
-        emulator.cycle();
-    }
-    catch (std:: string opcode) {
-        std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-        return 1;
+    while(true) {
+        try {
+            emulator.cycle();
+        }
+        catch (std:: string opcode) {
+            std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+            return 1;
+        }
     }
 
 	return 0;
