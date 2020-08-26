@@ -76,20 +76,36 @@ class Emulator {
         void executeSystemOperation();
         void returnFromSubroutine();
 
-        void setIndexRegister();
+        void jumpToAddress();
 
         void callSubroutine();
 
+        void skipIfEqual();
+
+        void skipIfNotEqual();
+
         void loadRegister();
 
+        void addByteToRegister();
+
         void executeRegisterOperation();
+        void copyRegister();
         void addRegisters();
+
+        void skipIfRegistersNotEqual();
+
+        void setIndexRegister();
+
+        void randomAnd();
 
         void updateGraphicsBuffer();
 
         void executeMiscOperation();
         void skipInstructionIfKeyPressed();
         void skipInstructionIfKeyNotPressed();
+        void storeDelayTimer();
+        void setDelayTimer();
+        void addToIndexPointer();
         void storeBinaryCodedDecimal();
 };
 

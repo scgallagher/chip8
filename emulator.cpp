@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
+#include <stdlib.h>
 #include "emulator.h"
 
 void initializeGraphics(){
@@ -44,22 +45,21 @@ void Emulator::printInstruction(std::string instruction) {
 void Emulator::returnFromSubroutine() {
     printInstruction("RET");
 
-    pc = stack[sp--];
+    pc = stack[--sp];
 }
 
-// 0xANNN: Set I to the address NNN
-void Emulator::setIndexRegister() {
-    I = opcode & 0x0FFF;
+// 0x1NNN: Jump to location nnn
+void Emulator::jumpToAddress() {
+    unsigned short address = opcode & 0x0FFF;
 
-    printInstruction("LD I, " + hexToString(I));
+    printInstruction("JP " + hexToString(address));
 
-    pc += 2;
+    pc = address;
 }
 
 // 0x2NNN: Call subroutine at address NNN
 void Emulator::callSubroutine() {
-    stack[sp] = pc;
-    ++sp;
+    stack[sp++] = pc + 2;
 
     unsigned short subroutineAddress = opcode & 0x0FFF;
     printInstruction("CALL " + hexToString(subroutineAddress));
@@ -67,13 +67,63 @@ void Emulator::callSubroutine() {
     pc = subroutineAddress; 
 }
 
+// 0x3XKK: Skip next instruction if Vx = kk
+void Emulator::skipIfEqual() {
+    unsigned short value = opcode & 0x00FF;
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("SE V" + hexToString(registerIndex, false) + ", " + hexToString(value));
+    if (V[registerIndex] == value) {
+        pc += 2;
+    }
+
+    pc += 2;
+}
+
+// 0x4XKK: Skip next instruction if Vx != kk
+void Emulator::skipIfNotEqual() {
+    unsigned short value = opcode & 0x00FF;
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("SNE V" + hexToString(registerIndex, false) + ", " + hexToString(value));
+    if (V[registerIndex] != value) {
+        pc += 2;
+    }
+
+    pc += 2;
+}
+
 // 0x6Xkk: Load the value kk into register VX
 void Emulator::loadRegister() {
     unsigned short value = opcode & 0x00FF;
-    unsigned short registerIndex = opcode & 0x0F00;
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
 
-    printInstruction("LD V" + hexToString(false) + ", " + hexToString(value));
+    printInstruction("LD V" + hexToString(registerIndex, false) + ", " + hexToString(value));
     V[registerIndex] = value;
+
+    pc += 2;
+}
+
+// 0x7XKK: Adds the value kk to the value of register Vx, then stores the result in Vx
+void Emulator::addByteToRegister() {
+    unsigned short value = opcode & 0x00FF;
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("ADD V" + hexToString(registerIndex, false) + ", " + hexToString(value));
+    V[registerIndex] += value;
+
+    pc += 2;
+}
+
+// 0x8XY0: Set Vx = Vy
+void Emulator::copyRegister() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "LD V" + hexToString(xRegisterIndex, false) + ", V" + hexToString(yRegisterIndex, false);
+    printInstruction(instruction);
+
+    V[xRegisterIndex] = V[yRegisterIndex];
 
     pc += 2;
 }
@@ -94,6 +144,76 @@ void Emulator::addRegisters() {
     }
 
     V[xRegisterIndex] += V[yRegisterIndex];
+
+    pc += 2;
+}
+
+// 0x9XY0: Skip next instruction if Vx != Vy.
+void Emulator::skipIfRegistersNotEqual() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "SNE V" + hexToString(xRegisterIndex, false) + ", V" + hexToString(yRegisterIndex, false);
+    printInstruction(instruction);
+
+    if (V[xRegisterIndex] != V[yRegisterIndex]) {
+        pc += 2;
+    }
+
+    pc += 2;
+}
+
+// 0xANNN: Set I to the address NNN
+void Emulator::setIndexRegister() {
+    I = opcode & 0x0FFF;
+
+    printInstruction("LD I, " + hexToString(I));
+
+    pc += 2;
+}
+
+// 0xCXKK: Set Vx = random byte AND kk
+void Emulator::randomAnd() {
+    unsigned short value = opcode & 0x00FF;
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("RND V" + hexToString(registerIndex, false) + ", " + hexToString(value));
+
+    int random = rand() % 256;
+    V[registerIndex] = random & value;
+
+    pc += 2;
+}
+
+// 0xFX07: Set Vx = delay timer value
+void Emulator::storeDelayTimer() {
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("LD V" + hexToString(registerIndex, false) + ", DT");
+
+    V[registerIndex] = delay_timer;
+
+    pc += 2;
+}
+
+// 0xFX15: Set delay timer = Vx
+void Emulator::setDelayTimer() {
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("LD DT, V" + hexToString(registerIndex, false));
+
+    delay_timer = V[registerIndex];
+
+    pc += 2;
+}
+
+// 0xFX1E: Set I = I + Vx
+void Emulator::addToIndexPointer() {
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("ADD I, V" + hexToString(registerIndex, false));
+
+    I += V[registerIndex];
 
     pc += 2;
 }
@@ -211,20 +331,30 @@ Emulator::Emulator() {
     carryFlagIndex = 0xFF;
 
     mainOpfunctions[0x0000] = &Emulator::executeSystemOperation;
-    mainOpfunctions[0xA000] = &Emulator::setIndexRegister;
+    mainOpfunctions[0x1000] = &Emulator::jumpToAddress;
     mainOpfunctions[0x2000] = &Emulator::callSubroutine;
+    mainOpfunctions[0x3000] = &Emulator::skipIfEqual;
+    mainOpfunctions[0x4000] = &Emulator::skipIfNotEqual;
     mainOpfunctions[0x6000] = &Emulator::loadRegister;
+    mainOpfunctions[0x7000] = &Emulator::addByteToRegister;
     mainOpfunctions[0x8000] = &Emulator::executeRegisterOperation;
+    mainOpfunctions[0x9000] = &Emulator::skipIfRegistersNotEqual;
+    mainOpfunctions[0xA000] = &Emulator::setIndexRegister;
+    mainOpfunctions[0xC000] = &Emulator::randomAnd;
     mainOpfunctions[0xD000] = &Emulator::updateGraphicsBuffer;
     mainOpfunctions[0xE000] = &Emulator::executeMiscOperation;
     mainOpfunctions[0xF000] = &Emulator::executeMiscOperation;
 
     systemOpfunctions[0xEE] = &Emulator::returnFromSubroutine;
     
+    registerOpfunctions[0x0] = &Emulator::copyRegister;
     registerOpfunctions[0x4] = &Emulator::addRegisters;
 
     miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
     miscOpfunctions[0xA1] = &Emulator::skipInstructionIfKeyNotPressed;
+    miscOpfunctions[0x07] = &Emulator::storeDelayTimer;
+    miscOpfunctions[0x15] = &Emulator::setDelayTimer;
+    miscOpfunctions[0x1E] = &Emulator::addToIndexPointer;
     miscOpfunctions[0x33] = &Emulator::storeBinaryCodedDecimal;
 }
 
