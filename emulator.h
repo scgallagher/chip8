@@ -61,10 +61,10 @@ class Emulator {
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F
         };
 
-        void (Emulator::*systemOpfunctions[0xEE])();
-        void (Emulator::*mainOpfunctions[0xF085])();
-        void (Emulator::*registerOpfunctions[0xE])();
-        void (Emulator::*miscOpfunctions[0xA1])();
+        void (Emulator::*systemOpfunctions[0xEE + 1])();
+        void (Emulator::*mainOpfunctions[0xF085 + 1])();
+        void (Emulator::*registerOpfunctions[0xE + 1])();
+        void (Emulator::*miscOpfunctions[0xA1 + 1])();
 
     private:
         Utilities *utilities;
