@@ -2,6 +2,7 @@
 #define EMULATOR_H
 
 #include <string>
+#include "utilities.h"
 
 void initializeGraphics();
 
@@ -66,6 +67,8 @@ class Emulator {
         void (Emulator::*miscOpfunctions[0xA1])();
 
     private:
+        Utilities *utilities;
+
         unsigned char carryFlagIndex;
 
         void clearRegisters();
