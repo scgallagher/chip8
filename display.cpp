@@ -205,12 +205,13 @@ Display::Display() {
   mainBox.set_spacing(5);
   add(mainBox);
 
-  infoBox.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  infoBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
   infoBox.set_spacing(5);
   mainBox.pack_start(infoBox, Gtk::PACK_SHRINK);
 
   infoFrame.set_label("Registers");
   infoBoxInner.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  infoBoxInner.set_spacing(5);
   infoFrame.add(infoBoxInner);
 
   programCounterLabel.set_justify(Gtk::JUSTIFY_LEFT); 
@@ -245,21 +246,23 @@ Display::Display() {
   
   infoBox.pack_start(infoFrame, Gtk::PACK_SHRINK);
 
-  stackBox.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  stackBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
   stackBox.set_spacing(5);
   mainBox.pack_start(stackBox, Gtk::PACK_SHRINK);
   stackBox.pack_start(stackFrame, Gtk::PACK_SHRINK);
   stackFrame.set_label("Stack");
   stackBoxInner.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  stackBoxInner.set_spacing(5);
   stackFrame.add(stackBoxInner);
   initializeStackLabels();
 
-  vBox.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  vBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
   vBox.set_spacing(5);
   mainBox.pack_start(vBox, Gtk::PACK_SHRINK);
   vBox.pack_start(vFrame, Gtk::PACK_SHRINK);
   vFrame.set_label("V Registers");
   vBoxInner.set_orientation(Gtk::ORIENTATION_VERTICAL);
+  vBoxInner.set_spacing(5);
   vFrame.add(vBoxInner);
   initializeVLabels();
 
