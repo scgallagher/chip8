@@ -64,7 +64,6 @@ void Display::setVLabels(unsigned char *V) {
 void Display::on_button_clicked() {
     emulator.cycle();
 
-    //programCounterLabel.set_text("pc: " + utilities.hexToString(emulator.pc));
     setProgramCounterLabel(utilities.hexToString(emulator.pc));
     setIndexLabel(utilities.hexToString(emulator.I));
     setStackPointerLabel(utilities.hexToString(emulator.sp));

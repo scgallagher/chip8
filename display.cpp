@@ -1,6 +1,19 @@
 #include "display.h"
 #include <iostream>
 
+void Display::initializeRegisterLabels(Gtk::Box *mainBox, Gtk::Box *outerBox, Gtk::Box *innerBox, Gtk::Frame *frame, void (Display::*initializeLabels)()) {
+  outerBox->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
+  outerBox->set_spacing(5);
+  mainBox->pack_start(*outerBox, Gtk::PACK_SHRINK);
+  outerBox->pack_start(*frame, Gtk::PACK_SHRINK);
+  frame->set_label("Stack");
+  innerBox->set_orientation(Gtk::ORIENTATION_VERTICAL);
+  innerBox->set_spacing(5);
+  frame->add(*innerBox);
+
+  (this->*initializeLabels)();
+}
+
 void Display::initializeStackLabels() {
     for (int i = 0; i < 16; i++) {
       Gtk::Label *label = new Gtk::Label();
@@ -13,7 +26,7 @@ void Display::initializeStackLabels() {
       box->add(*label);
       stackBoxes.push_back(box);
 
-      stackBoxInner.add(*box);
+      stackBoxInner->add(*box);
     }  
 }
 
@@ -29,97 +42,90 @@ void Display::initializeVLabels() {
       box->add(*label);
       vBoxes.push_back(box);
 
-      vBoxInner.add(*box);
+      vBoxInner->add(*box);
     }
+}
+
+void Display::initializeLabel(Gtk::Label *label, Gtk::Box *labelBox, Gtk::Box *wrappingBox) {
+  label->set_justify(Gtk::JUSTIFY_LEFT); 
+
+  labelBox->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
+  labelBox->set_spacing(5);
+  labelBox->set_margin_start(5);
+  labelBox->set_margin_end(5);
+  labelBox->add(*label);
+
+  wrappingBox->add(*labelBox);
+}
+
+void Display::instantiateLabels() {
+  mainBox = new Gtk::Box();
+
+  controlBox = new Gtk::Box();
+  controlFrame = new Gtk::Frame();
+
+  infoBox = new Gtk::Box();
+  infoFrame = new Gtk::Frame();
+  infoBoxInner = new Gtk::Box();
+
+  programCounterBox = new Gtk::Box();
+  programCounterLabel = new Gtk::Label();
+  indexBox = new Gtk::Box();
+  indexLabel = new Gtk::Label();
+  delayTimerBox = new Gtk::Box();
+  delayTimerLabel = new Gtk::Label();
+  soundTimerBox = new Gtk::Box();
+  soundTimerLabel = new Gtk::Label();
+  stackPointerBox = new Gtk::Box();
+  stackPointerLabel = new Gtk::Label();
+
+  stackBox = new Gtk::Box();
+  stackFrame = new Gtk::Frame();
+  stackBoxInner = new Gtk::Box();
+
+  vBox = new Gtk::Box();
+  vFrame = new Gtk::Frame();
+  vBoxInner = new Gtk::Box();;
 }
 
 Display::Display() {
   set_title("Chip8 Emulator");
   set_border_width(50);
 
-  mainBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  mainBox.set_spacing(5);
-  add(mainBox);
+  instantiateLabels();
 
-  infoBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  infoBox.set_spacing(5);
-  mainBox.pack_start(infoBox, Gtk::PACK_SHRINK);
+  mainBox->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
+  mainBox->set_spacing(5);
+  add(*mainBox);
 
-  infoFrame.set_label("Registers");
-  infoBoxInner.set_orientation(Gtk::ORIENTATION_VERTICAL);
-  infoBoxInner.set_spacing(5);
-  infoFrame.add(infoBoxInner);
-  infoBox.pack_start(infoFrame, Gtk::PACK_SHRINK);
+  infoBox->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
+  infoBox->set_spacing(5);
+  mainBox->pack_start(*infoBox, Gtk::PACK_SHRINK);
 
-  programCounterLabel.set_justify(Gtk::JUSTIFY_LEFT); 
-  programCounterBox.add(programCounterLabel);
-  programCounterBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  programCounterBox.set_spacing(5);
-  programCounterBox.set_margin_start(5);
-  programCounterBox.set_margin_end(5);
-  infoBoxInner.add(programCounterBox);
-  
-  indexLabel.set_justify(Gtk::JUSTIFY_LEFT); 
-  indexBox.add(indexLabel);
-  indexBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  indexBox.set_spacing(5);
-  indexBox.set_margin_start(5);
-  indexBox.set_margin_end(5);
-  infoBoxInner.add(indexBox);
+  infoFrame->set_label("Registers");
+  infoBoxInner->set_orientation(Gtk::ORIENTATION_VERTICAL);
+  infoBoxInner->set_spacing(5);
+  infoFrame->add(*infoBoxInner);
+  infoBox->pack_start(*infoFrame, Gtk::PACK_SHRINK);
 
-  delayTimerLabel.set_justify(Gtk::JUSTIFY_LEFT);
-  delayTimerBox.add(delayTimerLabel);
-  delayTimerBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  delayTimerBox.set_spacing(5);
-  delayTimerBox.set_margin_start(5);
-  delayTimerBox.set_margin_end(5);
-  infoBoxInner.add(delayTimerBox); 
+  initializeLabel(programCounterLabel, programCounterBox, infoBoxInner);
+  initializeLabel(indexLabel, indexBox, infoBoxInner);
+  initializeLabel(delayTimerLabel, delayTimerBox, infoBoxInner); 
+  initializeLabel(soundTimerLabel, soundTimerBox, infoBoxInner);
+  initializeLabel(stackPointerLabel, stackPointerBox, infoBoxInner); 
 
-  soundTimerLabel.set_justify(Gtk::JUSTIFY_LEFT);
-  soundTimerBox.add(soundTimerLabel);
-  soundTimerBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  soundTimerBox.set_spacing(5);
-  soundTimerBox.set_margin_start(5);
-  soundTimerBox.set_margin_end(5);
-  infoBoxInner.add(soundTimerBox);
+  initializeRegisterLabels(mainBox, stackBox, stackBoxInner, stackFrame, initializeStackLabels);
+  initializeRegisterLabels(mainBox, vBox, vBoxInner, vFrame, initializeVLabels);
 
-  stackPointerLabel.set_justify(Gtk::JUSTIFY_LEFT);
-  stackPointerBox.add(stackPointerLabel);
-  stackPointerBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  stackPointerBox.set_spacing(5);
-  stackPointerBox.set_margin_start(5);
-  stackPointerBox.set_margin_end(5);
-  infoBoxInner.add(stackPointerBox); 
-
-  stackBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  stackBox.set_spacing(5);
-  mainBox.pack_start(stackBox, Gtk::PACK_SHRINK);
-  stackBox.pack_start(stackFrame, Gtk::PACK_SHRINK);
-  stackFrame.set_label("Stack");
-  stackBoxInner.set_orientation(Gtk::ORIENTATION_VERTICAL);
-  stackBoxInner.set_spacing(5);
-  stackFrame.add(stackBoxInner);
-  initializeStackLabels();
-
-  vBox.set_orientation(Gtk::ORIENTATION_HORIZONTAL);
-  vBox.set_spacing(5);
-  mainBox.pack_start(vBox, Gtk::PACK_SHRINK);
-  vBox.pack_start(vFrame, Gtk::PACK_SHRINK);
-  vFrame.set_label("V Registers");
-  vBoxInner.set_orientation(Gtk::ORIENTATION_VERTICAL);
-  vBoxInner.set_spacing(5);
-  vFrame.add(vBoxInner);
-  initializeVLabels();
-
-  controlBox.set_orientation(Gtk::ORIENTATION_VERTICAL);
-  controlBox.set_spacing(5);
-  mainBox.pack_start(controlBox, Gtk::PACK_SHRINK);
+  controlBox->set_orientation(Gtk::ORIENTATION_VERTICAL);
+  controlBox->set_spacing(5);
+  mainBox->pack_start(*controlBox, Gtk::PACK_SHRINK);
 
 	stepButton.set_label("Step");
-  controlFrame.add(stepButton);
-  controlFrame.set_label("Controls");
+  controlFrame->add(stepButton);
+  controlFrame->set_label("Controls");
 
-  controlBox.pack_start(controlFrame, Gtk::PACK_SHRINK);
+  controlBox->pack_start(*controlFrame, Gtk::PACK_SHRINK);
 
   stepButton.signal_clicked().connect(sigc::mem_fun(*this,
               &Display::on_button_clicked));
@@ -128,23 +134,23 @@ Display::Display() {
 }
 
 void Display::setProgramCounterLabel(std::string value) {
-  programCounterLabel.set_text("pc: " + value);
+  programCounterLabel->set_text("pc: " + value);
 }
 
 void Display::setIndexLabel(std::string value) {
-  indexLabel.set_text("I: " + value);
+  indexLabel->set_text("I: " + value);
 }
 
 void Display::setStackPointerLabel(std::string value) {
-  stackPointerLabel.set_text("sp: " + value);
+  stackPointerLabel->set_text("sp: " + value);
 }
 
 void Display::setDelayTimerLabel(std::string value) {
-  delayTimerLabel.set_text("dt: " + value);
+  delayTimerLabel->set_text("dt: " + value);
 }
 
 void Display::setSoundTimerLabel(std::string value) {
-  soundTimerLabel.set_text("st: " + value);
+  soundTimerLabel->set_text("st: " + value);
 }
 
 Display::~Display()
