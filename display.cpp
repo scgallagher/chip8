@@ -114,8 +114,8 @@ Display::Display() {
   initializeLabel(soundTimerLabel, soundTimerBox, infoBoxInner);
   initializeLabel(stackPointerLabel, stackPointerBox, infoBoxInner); 
 
-  initializeRegisterLabels(mainBox, stackBox, stackBoxInner, stackFrame, initializeStackLabels);
-  initializeRegisterLabels(mainBox, vBox, vBoxInner, vFrame, initializeVLabels);
+  initializeRegisterLabels(mainBox, stackBox, stackBoxInner, stackFrame, &Display::initializeStackLabels);
+  initializeRegisterLabels(mainBox, vBox, vBoxInner, vFrame, &Display::initializeVLabels);
 
   controlBox->set_orientation(Gtk::ORIENTATION_VERTICAL);
   controlBox->set_spacing(5);
