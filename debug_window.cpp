@@ -1,7 +1,7 @@
-#include "display.h"
+#include "debug_window.h"
 #include <iostream>
 
-void Display::initializeRegisterLabels(Gtk::Box *mainBox, Gtk::Box *outerBox, Gtk::Box *innerBox, Gtk::Frame *frame, void (Display::*initializeLabels)()) {
+void DebugWindow::initializeRegisterLabels(Gtk::Box *mainBox, Gtk::Box *outerBox, Gtk::Box *innerBox, Gtk::Frame *frame, void (DebugWindow::*initializeLabels)()) {
   outerBox->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
   outerBox->set_spacing(5);
   mainBox->pack_start(*outerBox, Gtk::PACK_SHRINK);
@@ -14,7 +14,7 @@ void Display::initializeRegisterLabels(Gtk::Box *mainBox, Gtk::Box *outerBox, Gt
   (this->*initializeLabels)();
 }
 
-void Display::initializeStackLabels() {
+void DebugWindow::initializeStackLabels() {
     for (int i = 0; i < 16; i++) {
       Gtk::Label *label = new Gtk::Label();
       label->set_justify(Gtk::JUSTIFY_LEFT);
@@ -30,7 +30,7 @@ void Display::initializeStackLabels() {
     }  
 }
 
-void Display::initializeVLabels() {
+void DebugWindow::initializeVLabels() {
     for (int i = 0; i < 16; i++) {
       Gtk::Label *label = new Gtk::Label();
       label->set_justify(Gtk::JUSTIFY_LEFT);
@@ -46,7 +46,7 @@ void Display::initializeVLabels() {
     }
 }
 
-void Display::initializeLabel(Gtk::Label *label, Gtk::Box *labelBox, Gtk::Box *wrappingBox) {
+void DebugWindow::initializeLabel(Gtk::Label *label, Gtk::Box *labelBox, Gtk::Box *wrappingBox) {
   label->set_justify(Gtk::JUSTIFY_LEFT); 
 
   labelBox->set_orientation(Gtk::ORIENTATION_HORIZONTAL);
@@ -58,7 +58,7 @@ void Display::initializeLabel(Gtk::Label *label, Gtk::Box *labelBox, Gtk::Box *w
   wrappingBox->add(*labelBox);
 }
 
-void Display::instantiateLabels() {
+void DebugWindow::instantiateLabels() {
   mainBox = new Gtk::Box();
 
   controlBox = new Gtk::Box();
@@ -88,7 +88,7 @@ void Display::instantiateLabels() {
   vBoxInner = new Gtk::Box();;
 }
 
-Display::Display() {
+DebugWindow::DebugWindow() {
   set_title("Chip8 Emulator");
   set_border_width(50);
 
@@ -114,8 +114,8 @@ Display::Display() {
   initializeLabel(soundTimerLabel, soundTimerBox, infoBoxInner);
   initializeLabel(stackPointerLabel, stackPointerBox, infoBoxInner); 
 
-  initializeRegisterLabels(mainBox, stackBox, stackBoxInner, stackFrame, &Display::initializeStackLabels);
-  initializeRegisterLabels(mainBox, vBox, vBoxInner, vFrame, &Display::initializeVLabels);
+  initializeRegisterLabels(mainBox, stackBox, stackBoxInner, stackFrame, &DebugWindow::initializeStackLabels);
+  initializeRegisterLabels(mainBox, vBox, vBoxInner, vFrame, &DebugWindow::initializeVLabels);
 
   controlBox->set_orientation(Gtk::ORIENTATION_VERTICAL);
   controlBox->set_spacing(5);
@@ -128,31 +128,31 @@ Display::Display() {
   controlBox->pack_start(*controlFrame, Gtk::PACK_SHRINK);
 
   stepButton.signal_clicked().connect(sigc::mem_fun(*this,
-              &Display::on_button_clicked));
+              &DebugWindow::on_button_clicked));
 
   show_all_children();
 }
 
-void Display::setProgramCounterLabel(std::string value) {
+void DebugWindow::setProgramCounterLabel(std::string value) {
   programCounterLabel->set_text("pc: " + value);
 }
 
-void Display::setIndexLabel(std::string value) {
+void DebugWindow::setIndexLabel(std::string value) {
   indexLabel->set_text("I: " + value);
 }
 
-void Display::setStackPointerLabel(std::string value) {
+void DebugWindow::setStackPointerLabel(std::string value) {
   stackPointerLabel->set_text("sp: " + value);
 }
 
-void Display::setDelayTimerLabel(std::string value) {
+void DebugWindow::setDelayTimerLabel(std::string value) {
   delayTimerLabel->set_text("dt: " + value);
 }
 
-void Display::setSoundTimerLabel(std::string value) {
+void DebugWindow::setSoundTimerLabel(std::string value) {
   soundTimerLabel->set_text("st: " + value);
 }
 
-Display::~Display()
+DebugWindow::~DebugWindow()
 {
 }

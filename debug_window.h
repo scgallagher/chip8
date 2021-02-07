@@ -1,5 +1,5 @@
-#ifndef DISPLAY_H
-#define DISPLAY_H
+#ifndef DEBUG_WINDOW_H
+#define DEBUG_WINDOW_H
 
 #include <string>
 #include <vector>
@@ -9,16 +9,16 @@
 #include <gtkmm/frame.h>
 #include <gtkmm/label.h>
 
-class Display : public Gtk::Window
+class DebugWindow : public Gtk::Window
 {
 
 public:
-  Display();
-  virtual ~Display();
+  DebugWindow();
+  virtual ~DebugWindow();
 
   void instantiateLabels();
 
-  void initializeRegisterLabels(Gtk::Box*, Gtk::Box*, Gtk::Box*, Gtk::Frame*, void (Display::*initializeLabels)());
+  void initializeRegisterLabels(Gtk::Box*, Gtk::Box*, Gtk::Box*, Gtk::Frame*, void (DebugWindow::*initializeLabels)());
 
   void initializeStackLabels();
   void initializeVLabels();

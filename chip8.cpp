@@ -3,7 +3,7 @@
 #include <gtkmm/application.h>
 #include <thread>
 #include "emulator.h"
-#include "display.h"
+#include "debug_window.h"
 #include "utilities.h"
 #include <SDL2/SDL.h>
 
@@ -29,22 +29,22 @@ void drawGraphics(){
     emulator.drawFlag = false;
 }
 
-void launchDisplay(int argc, char **argv) {
+void launchDebugWindow(int argc, char **argv) {
     auto app = Gtk::Application::create(argc, argv, "org.gtkmm.example");
 
-    Display display;
-    display.setProgramCounterLabel(utilities.hexToString(emulator.pc));
-    display.setIndexLabel(utilities.hexToString(emulator.I));
-    display.setStackPointerLabel(utilities.hexToString(emulator.sp));
-    display.setDelayTimerLabel(utilities.hexToString(emulator.delay_timer));
-    display.setSoundTimerLabel(utilities.hexToString(emulator.sound_timer));
-    display.setStackLabels(emulator.stack);
-    display.setVLabels(emulator.V);
+    DebugWindow debugWindow;
+    debugWindow.setProgramCounterLabel(utilities.hexToString(emulator.pc));
+    debugWindow.setIndexLabel(utilities.hexToString(emulator.I));
+    debugWindow.setStackPointerLabel(utilities.hexToString(emulator.sp));
+    debugWindow.setDelayTimerLabel(utilities.hexToString(emulator.delay_timer));
+    debugWindow.setSoundTimerLabel(utilities.hexToString(emulator.sound_timer));
+    debugWindow.setStackLabels(emulator.stack);
+    debugWindow.setVLabels(emulator.V);
 
-    app->run(display);
+    app->run(debugWindow);
 }
 
-void Display::setStackLabels(unsigned short *stack) {
+void DebugWindow::setStackLabels(unsigned short *stack) {
     for (int i = 0; i < 16; i++) {
         Gtk::Label *label = stackLabels[i];
         std::stringstream ss;
@@ -53,7 +53,7 @@ void Display::setStackLabels(unsigned short *stack) {
     }
 }
 
-void Display::setVLabels(unsigned char *V) {
+void DebugWindow::setVLabels(unsigned char *V) {
     for (int i = 0; i < 16; i++) {
         Gtk::Label *label = vLabels[i];
         std::stringstream ss;
@@ -62,7 +62,7 @@ void Display::setVLabels(unsigned char *V) {
     }
 }
 
-void Display::on_button_clicked() {
+void DebugWindow::on_button_clicked() {
     emulator.cycle();
 
     setProgramCounterLabel(utilities.hexToString(emulator.pc));
@@ -92,18 +92,18 @@ int main(int argc, char **argv) {
     }
     emulator.loadProgram(romFilePath);
 
-	// std::thread displayThread(launchDisplay, argc, argv);
+	std::thread debugWindowThread(launchDebugWindow, argc, argv);
     
-	// displayThread.join();
-    while(true) {
-        try {
-            emulator.cycle();
-        }
-        catch (std:: string opcode) {
-            std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-            return 1;
-        }
-    }
+	debugWindowThread.join();
+    // while(true) {
+    //     try {
+    //         emulator.cycle();
+    //     }
+    //     catch (std:: string opcode) {
+    //         std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+    //         return 1;
+    //     }
+    // }
 
 	return 0;
 }
