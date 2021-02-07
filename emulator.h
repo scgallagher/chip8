@@ -32,7 +32,9 @@ class Emulator {
         unsigned short pc;
 
         // Black and white graphics (2048 pixels or 64x32)
-        unsigned char gfx[64 * 32];
+        const static unsigned char DISPLAY_WIDTH = 64;
+        const static unsigned char DISPLAY_HEIGHT = 32;
+        unsigned char gfx[DISPLAY_WIDTH * DISPLAY_HEIGHT];
 
         unsigned char delay_timer;
         unsigned char sound_timer;
@@ -77,6 +79,8 @@ class Emulator {
         void executeOperation(void (Emulator::*[])(), unsigned short);
 
         void executeSystemOperation();
+
+        void clearDisplay();
         void returnFromSubroutine();
 
         void jumpToAddress();

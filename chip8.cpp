@@ -5,6 +5,7 @@
 #include "emulator.h"
 #include "display.h"
 #include "utilities.h"
+#include <SDL2/SDL.h>
 
 Emulator emulator;
 
@@ -85,24 +86,24 @@ int main(int argc, char **argv) {
 
     emulator.initialize();
 
-    std::string romFilePath = "roms/TETRIS";
+    std::string romFilePath = "roms/IBM_LOGO";
     if (argc > 1) {
         romFilePath = argv[1];
     }
     emulator.loadProgram(romFilePath);
 
-	std::thread displayThread(launchDisplay, argc, argv);
+	// std::thread displayThread(launchDisplay, argc, argv);
     
-	displayThread.join();
-    // while(true) {
-    //     try {
-    //         emulator.cycle();
-    //     }
-    //     catch (std:: string opcode) {
-    //         std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-    //         return 1;
-    //     }
-    // }
+	// displayThread.join();
+    while(true) {
+        try {
+            emulator.cycle();
+        }
+        catch (std:: string opcode) {
+            std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+            return 1;
+        }
+    }
 
 	return 0;
 }

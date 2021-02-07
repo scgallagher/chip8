@@ -236,6 +236,17 @@ void Emulator::updateGraphicsBuffer() {
     pc += 2;
 }
 
+// 0x00E0: Clear the display
+void Emulator::clearDisplay() {
+    printInstruction("CLS");
+
+    for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
+        gfx[i] = 0x0;
+    }
+
+    pc += 2;
+}
+
 // 0xEX9E: Skip next instruction if key stored in V[X] is pressed
 void Emulator::skipInstructionIfKeyPressed() {
     unsigned short index = (opcode & 0x0F00) >> 8;
@@ -324,6 +335,7 @@ Emulator::Emulator() {
     mainOpfunctions[0xE000] = &Emulator::executeMiscOperation;
     mainOpfunctions[0xF000] = &Emulator::executeMiscOperation;
 
+    systemOpfunctions[0xE0] = &Emulator::clearDisplay;
     systemOpfunctions[0xEE] = &Emulator::returnFromSubroutine;
     
     registerOpfunctions[0x0] = &Emulator::copyRegister;
