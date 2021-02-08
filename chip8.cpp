@@ -3,6 +3,7 @@
 #include <gtkmm/application.h>
 #include <thread>
 #include "emulator.h"
+#include "display.h"
 #include "debug_window.h"
 #include "utilities.h"
 #include <SDL2/SDL.h>
@@ -80,6 +81,15 @@ void DebugWindow::on_button_clicked() {
     emulator.setKeys();
 }
 
+unsigned char* getBlankScreen() {
+    int bufferSize = 64 * 32;
+    unsigned char* buffer = new unsigned char[bufferSize];
+    for (int i = 0; i < bufferSize; i++) {
+        buffer[i] = 0x0;
+    }
+    return buffer;
+}
+
 int main(int argc, char **argv) {
     initializeGraphics();
     initializeInput();
@@ -92,18 +102,62 @@ int main(int argc, char **argv) {
     }
     emulator.loadProgram(romFilePath);
 
-	std::thread debugWindowThread(launchDebugWindow, argc, argv);
+	// std::thread debugWindowThread(launchDebugWindow, argc, argv);
     
-	debugWindowThread.join();
+	// debugWindowThread.join();
+
     // while(true) {
-    //     try {
-    //         emulator.cycle();
-    //     }
-    //     catch (std:: string opcode) {
-    //         std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-    //         return 1;
-    //     }
+        // try {
+        //     emulator.cycle();
+        // }
+        // catch (std:: string opcode) {
+        //     std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+        //     return 1;
+        // }
     // }
+
+    Display* display = new Display();
+    if (!display->initialize()) {
+        std::cout << "Failed to initialize" << std::endl;
+    }
+    else {
+        unsigned char* buffer = getBlankScreen();
+        if (!display->loadMedia(buffer)) {
+            std::cout << "Failed to load media" << std::endl;
+        }
+        else {
+            SDL_Rect* stretchRect = new SDL_Rect();
+            stretchRect->x = 0;
+            stretchRect->y = 0;
+            stretchRect->w = display->SCREEN_WIDTH;
+            stretchRect->h = display->SCREEN_HEIGHT;
+            SDL_BlitScaled(display->imageSurface, NULL, display->screenSurface, stretchRect);
+            SDL_UpdateWindowSurface(display->window);
+
+            bool quit = false;
+            SDL_Event* event = new SDL_Event();
+            while (!quit) {
+                while (SDL_PollEvent(event) != 0) {
+                    if (event->type == SDL_QUIT) {
+                        quit = true;
+                    }
+                }
+
+                try {
+                    emulator.cycle();
+                }
+                catch (std:: string opcode) {
+                    std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+                    return 1;
+                }
+
+                buffer = display->processColor(emulator.gfx);
+                display->loadMedia(buffer);
+                SDL_BlitScaled(display->imageSurface, NULL, display->screenSurface, stretchRect);
+                SDL_UpdateWindowSurface(display->window);
+            }
+        }
+    }
 
 	return 0;
 }
