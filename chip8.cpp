@@ -106,16 +106,6 @@ int main(int argc, char **argv) {
     
 	// debugWindowThread.join();
 
-    // while(true) {
-        // try {
-        //     emulator.cycle();
-        // }
-        // catch (std:: string opcode) {
-        //     std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-        //     return 1;
-        // }
-    // }
-
     Display* display = new Display();
     if (!display->initialize()) {
         std::cout << "Failed to initialize" << std::endl;
