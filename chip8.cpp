@@ -107,45 +107,29 @@ int main(int argc, char **argv) {
 	// debugWindowThread.join();
 
     Display* display = new Display();
-    if (!display->initialize()) {
-        std::cout << "Failed to initialize" << std::endl;
+    try {
+        display->initialize();
+    } // TODO: make this code throw a class instead of a string
+    catch (std::string error) {
+        std::cout << "ERROR: Unable to initialize display: " + error << std::endl;
     }
-    else {
-        unsigned char* buffer = getBlankScreen();
-        if (!display->loadMedia(buffer)) {
-            std::cout << "Failed to load media" << std::endl;
-        }
-        else {
-            SDL_Rect* stretchRect = new SDL_Rect();
-            stretchRect->x = 0;
-            stretchRect->y = 0;
-            stretchRect->w = display->SCREEN_WIDTH;
-            stretchRect->h = display->SCREEN_HEIGHT;
-            SDL_BlitScaled(display->imageSurface, NULL, display->screenSurface, stretchRect);
-            SDL_UpdateWindowSurface(display->window);
 
-            bool quit = false;
-            SDL_Event* event = new SDL_Event();
-            while (!quit) {
-                while (SDL_PollEvent(event) != 0) {
-                    if (event->type == SDL_QUIT) {
-                        quit = true;
-                    }
-                }
-
-                try {
-                    emulator.cycle();
-                }
-                catch (std:: string opcode) {
-                    std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-                    return 1;
-                }
-
-                buffer = display->processColor(emulator.gfx);
-                display->loadMedia(buffer);
-                SDL_BlitScaled(display->imageSurface, NULL, display->screenSurface, stretchRect);
-                SDL_UpdateWindowSurface(display->window);
+    bool quit = false;
+    SDL_Event* event = new SDL_Event();
+    while (!quit) {
+        while (SDL_PollEvent(event) != 0) {
+            if (event->type == SDL_QUIT) {
+                quit = true;
             }
+        }
+
+        try {
+            emulator.cycle();
+            display->updateDisplay(emulator.gfx);
+        }
+        catch (std:: string opcode) {
+            std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+            return 1;
         }
     }
 

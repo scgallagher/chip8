@@ -15,11 +15,15 @@ class Display {
         Display();
         virtual ~Display();
 
-        bool initialize();
+        void initialize();
         SDL_Surface* loadFromBuffer(void*);
         SDL_Surface* loadSurface(unsigned char*);
         bool loadMedia(unsigned char*);
+        void updateDisplay(unsigned char*);
         unsigned char* processColor(unsigned char*);
+
+    private:
+        SDL_Rect* stretchRect;
 };
 
 #endif

@@ -3,23 +3,26 @@
 #include <iostream>
 
 Display::Display() {
-
+    stretchRect = new SDL_Rect();
+    stretchRect->x = 0;
+    stretchRect->y = 0;
+    stretchRect->w = SCREEN_WIDTH;
+    stretchRect->h = SCREEN_HEIGHT;
 }
 
-bool Display::initialize() {
+void Display::initialize() {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::cout << "Could not initialize SDL. SDL_Error: " << SDL_GetError() << std::endl;
-        return false;
+        std::string error = "Could not initialize SDL. SDL_Error: " + std::string(SDL_GetError());
+        throw error;
     }
     else {
         window = SDL_CreateWindow("Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
         if (window == NULL) {
-            std::cout << "Could not create window. SDL_Error: " << SDL_GetError() << std::endl;
-            return false;
+            std::string error = "Could not create window. SDL_Error: " + std::string(SDL_GetError());
+            throw error;
         }
         else {
             screenSurface = SDL_GetWindowSurface(window);
-            return true;
         }
     }
 }
@@ -66,6 +69,17 @@ bool Display::loadMedia(unsigned char* buffer) {
     }
     else {
         return true;
+    }
+}
+
+void Display::updateDisplay(unsigned char* buffer) {
+    unsigned char* colorProcessedBuffer = processColor(buffer);
+    if (!loadMedia(colorProcessedBuffer)) {
+        std::cout << "Failed to load media" << std::endl;
+    }
+    else {
+        SDL_BlitScaled(imageSurface, NULL, screenSurface, stretchRect);
+        SDL_UpdateWindowSurface(window);
     }
 }
 
