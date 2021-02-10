@@ -2,29 +2,40 @@ CXX = g++
 CXXFLAGS = --std=c++11
 GTK_INCLUDE = `pkg-config gtkmm-3.0 --cflags --libs`
 SDL_INCLUDE = -lSDL2
+SOURCE_DIR = src
+BUILD_DIR = build
 
 all: compile
 
 debug: CXXFLAGS += -g
 debug: clean compile
 
-compile: chip8.o emulator.o display.o debug_window.o utilities.o
-	$(CXX) $(CXXFLAGS) -o chip8 chip8.o emulator.o display.o debug_window.o utilities.o $(SDL_INCLUDE) $(GTK_INCLUDE)
+compile: dir chip8 emulator display debug_window utilities
+	$(CXX) $(CXXFLAGS) -o chip8 \
+	$(BUILD_DIR)/chip8.o \
+	$(BUILD_DIR)/emulator.o \
+	$(BUILD_DIR)/display.o \
+	$(BUILD_DIR)/debug_window.o \
+	$(BUILD_DIR)/utilities.o \
+	$(SDL_INCLUDE) $(GTK_INCLUDE)
 
-chip8.o: chip8.cpp
-	$(CXX) $(CXXFLAGS) -c chip8.cpp $(SDL_INCLUDE) $(GTK_INCLUDE)
+dir:
+	if [ ! -d "build/" ]; then mkdir build; fi
 
-emulator.o: emulator.cpp
-	$(CXX) $(CXXFLAGS) -c emulator.cpp
+chip8: $(SOURCE_DIR)/chip8.cpp
+	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/chip8.cpp -o $(BUILD_DIR)/chip8.o $(SDL_INCLUDE) $(GTK_INCLUDE)
 
-display.o: display.cpp
-	$(CXX) $(CXXFLAGS) -c display.cpp $(SDL_INCLUDE)
+emulator: $(SOURCE_DIR)/emulator.cpp
+	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/emulator.cpp -o $(BUILD_DIR)/emulator.o
 
-debug_window.o: debug_window.cpp
-	$(CXX) $(CXXFLAGS) -c debug_window.cpp $(SDL_INCLUDE) $(GTK_INCLUDE)
+display: $(SOURCE_DIR)/display.cpp
+	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/display.cpp  -o $(BUILD_DIR)/display.o $(SDL_INCLUDE)
 
-utilities.o: utilities.cpp
-	$(CXX) $(CXXFLAGS) -c utilities.cpp
+debug_window: $(SOURCE_DIR)/debug_window.cpp
+	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/debug_window.cpp  -o $(BUILD_DIR)/debug_window.o $(SDL_INCLUDE) $(GTK_INCLUDE)
+
+utilities: $(SOURCE_DIR)/utilities.cpp
+	$(CXX) $(CXXFLAGS) -c $(SOURCE_DIR)/utilities.cpp -o $(BUILD_DIR)/utilities.o
 
 clean:
-	rm -f chip8 chip8.exe *.o
+	rm -rf build/ chip8 chip8.exe *.o
