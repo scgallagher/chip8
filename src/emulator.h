@@ -73,6 +73,8 @@ class Emulator {
 
         unsigned char carryFlagIndex;
 
+        bool includeVyInShift;
+
         void clearRegisters();
         void printInstruction(std::string);
 
@@ -102,6 +104,8 @@ class Emulator {
         void bitwiseXor();
         void addRegisters();
         void subtractRegisters();
+        void shiftRight();
+        void shiftLeft();
 
         void skipInstructionIfKeyPressed();
         void skipInstructionIfKeyNotPressed();

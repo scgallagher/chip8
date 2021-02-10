@@ -286,6 +286,52 @@ void Emulator::subtractRegisters() {
     pc += 2;
 }
 
+// 0x8XY6: Shift Vx right by 1 byte
+void Emulator::shiftRight() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+
+    std::string instruction = "SHR V" + utilities->hexToString(xRegisterIndex, false);
+    if (includeVyInShift) {
+        int yRegisterIndex = (opcode & 0x00F0) >> 4;
+        instruction += ", V" + utilities->hexToString(yRegisterIndex, false);
+
+        V[xRegisterIndex] = V[yRegisterIndex];
+    }
+
+    printInstruction(instruction);
+
+    if ((V[xRegisterIndex] & 0x1) == 1) {
+        V[carryFlagIndex] = 1;
+    }
+
+    V[xRegisterIndex] = V[xRegisterIndex] >> 1;
+
+    pc += 2;
+}
+
+// 0x8XYE: Shift Vx left by 1 byte
+void Emulator::shiftLeft() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+
+    std::string instruction = "SHL V" + utilities->hexToString(xRegisterIndex, false);
+    if (includeVyInShift) {
+        int yRegisterIndex = (opcode & 0x00F0) >> 4;
+        instruction += ", V" + utilities->hexToString(yRegisterIndex, false);
+
+        V[xRegisterIndex] = V[yRegisterIndex];
+    }
+
+    printInstruction(instruction);
+
+    if ((V[xRegisterIndex] >> 7) == 1) {
+        V[carryFlagIndex] = 1;
+    }
+
+    V[xRegisterIndex] = V[xRegisterIndex] << 1;
+
+    pc += 2;
+}
+
 // 0xEX9E: Skip next instruction if key stored in V[X] is pressed
 void Emulator::skipInstructionIfKeyPressed() {
     unsigned short index = (opcode & 0x0F00) >> 8;
@@ -391,6 +437,7 @@ Emulator::Emulator() {
     utilities = new Utilities();
 
     carryFlagIndex = 0xF;
+    includeVyInShift = false;
 
     mainOpfunctions[0x0000] = &Emulator::executeSystemOperation;
     mainOpfunctions[0x1000] = &Emulator::jumpToAddress;
@@ -417,6 +464,8 @@ Emulator::Emulator() {
     registerOpfunctions[0x3] = &Emulator::bitwiseXor;
     registerOpfunctions[0x4] = &Emulator::addRegisters;
     registerOpfunctions[0x5] = &Emulator::subtractRegisters;
+    registerOpfunctions[0x6] = &Emulator::shiftRight;
+    registerOpfunctions[0xE] = &Emulator::shiftLeft;
 
     miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
     miscOpfunctions[0xA1] = &Emulator::skipInstructionIfKeyNotPressed;
