@@ -215,7 +215,7 @@ void Emulator::bitwiseOr() {
     std::string instruction("OR V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false));
     printInstruction(instruction);
 
-    V[xRegisterIndex] = V[xRegisterIndex] | V[yRegisterIndex];
+    V[xRegisterIndex] |= V[yRegisterIndex];
 
     pc += 2;
 }
@@ -228,7 +228,20 @@ void Emulator::bitwiseAnd() {
     std::string instruction("AND V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false));
     printInstruction(instruction);
 
-    V[xRegisterIndex] = V[xRegisterIndex] & V[yRegisterIndex];
+    V[xRegisterIndex] &= V[yRegisterIndex];
+
+    pc += 2;
+}
+
+// 0x8XY3: Bitwise XOR (Vx = Vx ^ Vy)
+void Emulator::bitwiseXor() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction("XOR V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false));
+    printInstruction(instruction);
+
+    V[xRegisterIndex] ^= V[yRegisterIndex];
 
     pc += 2;
 }
@@ -249,6 +262,26 @@ void Emulator::addRegisters() {
     }
 
     V[xRegisterIndex] += V[yRegisterIndex];
+
+    pc += 2;
+}
+
+// 0x8XY5: Subtract value of register Y from register X
+void Emulator::subtractRegisters() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "SUB V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
+    printInstruction(instruction);
+
+    if (V[yRegisterIndex] > (0xFF - V[xRegisterIndex])) {
+        V[carryFlagIndex] = 1; // Set the carry flag
+    }
+    else {
+        V[carryFlagIndex] = 0;
+    }
+
+    V[xRegisterIndex] -= V[yRegisterIndex];
 
     pc += 2;
 }
@@ -357,7 +390,7 @@ void Emulator::cycle() {
 Emulator::Emulator() {
     utilities = new Utilities();
 
-    carryFlagIndex = 0xFF;
+    carryFlagIndex = 0xF;
 
     mainOpfunctions[0x0000] = &Emulator::executeSystemOperation;
     mainOpfunctions[0x1000] = &Emulator::jumpToAddress;
@@ -381,7 +414,9 @@ Emulator::Emulator() {
     registerOpfunctions[0x0] = &Emulator::copyRegister;
     registerOpfunctions[0x1] = &Emulator::bitwiseOr;
     registerOpfunctions[0x2] = &Emulator::bitwiseAnd;
+    registerOpfunctions[0x3] = &Emulator::bitwiseXor;
     registerOpfunctions[0x4] = &Emulator::addRegisters;
+    registerOpfunctions[0x5] = &Emulator::subtractRegisters;
 
     miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
     miscOpfunctions[0xA1] = &Emulator::skipInstructionIfKeyNotPressed;
