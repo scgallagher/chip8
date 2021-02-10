@@ -18,11 +18,8 @@ void Emulator::printInstruction(std::string instruction) {
     std::cout << utilities->hexToString(pc) << ": " << utilities->opcodeToString(opcode) << " " << instruction << std::endl;
 }
 
-// 0x00EE: Return from subroutine
-void Emulator::returnFromSubroutine() {
-    printInstruction("RET");
-
-    pc = stack[--sp];
+void Emulator::executeSystemOperation() {
+    executeOperation(systemOpfunctions, 0x00FF);
 }
 
 // 0x1NNN: Jump to location nnn
@@ -70,6 +67,19 @@ void Emulator::skipIfNotEqual() {
     pc += 2;
 }
 
+// 0x5XY0
+void Emulator::skipIfRegistersEqual() {
+    unsigned short xRegisterIndex = (opcode & 0x0F00) >> 8;
+    unsigned short yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    printInstruction("SE V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false));
+    if (V[xRegisterIndex] == V[yRegisterIndex]) {
+        pc += 2;
+    }
+
+    pc += 2;
+}
+
 // 0x6Xkk: Load the value kk into register VX
 void Emulator::loadRegister() {
     unsigned short value = opcode & 0x00FF;
@@ -92,37 +102,8 @@ void Emulator::addByteToRegister() {
     pc += 2;
 }
 
-// 0x8XY0: Set Vx = Vy
-void Emulator::copyRegister() {
-    int xRegisterIndex = (opcode & 0x0F00) >> 8;
-    int yRegisterIndex = (opcode & 0x00F0) >> 4;
-
-    std::string instruction =  "LD V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
-    printInstruction(instruction);
-
-    V[xRegisterIndex] = V[yRegisterIndex];
-
-    pc += 2;
-}
-
-// 0x8XY4: Add value of register Y to register X
-void Emulator::addRegisters() {
-    int xRegisterIndex = (opcode & 0x0F00) >> 8;
-    int yRegisterIndex = (opcode & 0x00F0) >> 4;
-
-    std::string instruction =  "ADD V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
-    printInstruction(instruction);
-
-    if (V[yRegisterIndex] > (0xFF - V[xRegisterIndex])) {
-        V[carryFlagIndex] = 1; // Set the carry flag
-    }
-    else {
-        V[carryFlagIndex] = 0;
-    }
-
-    V[xRegisterIndex] += V[yRegisterIndex];
-
-    pc += 2;
+void Emulator::executeRegisterOperation() {
+    executeOperation(registerOpfunctions, 0x000F);
 }
 
 // 0x9XY0: Skip next instruction if Vx != Vy.
@@ -160,6 +141,129 @@ void Emulator::randomAnd() {
     V[registerIndex] = random & value;
 
     pc += 2;
+}
+
+// 0xDXYN: Updating graphics buffer
+void Emulator::updateGraphicsBuffer() {
+    unsigned short xIndex = (opcode & 0x0F00) >> 8;
+    unsigned short yIndex = (opcode & 0x00F0) >> 4;
+    unsigned short x = V[xIndex];
+    unsigned short y = V[yIndex];
+    unsigned short height = opcode & 0x000F;
+    unsigned short pixel;
+
+    std::string instruction = "DRW V" + utilities->hexToString(xIndex, false) + ", V" + utilities->hexToString(yIndex, false) + ", " + utilities->hexToString(height);
+    printInstruction(instruction);
+    
+    V[0xF] = 0;
+    for (int yline = 0; yline < height; yline++) {
+        pixel = memory[I + yline];
+        for (int xline = 0; xline < 8; xline++) {
+            if ((pixel & (0x80 >> xline)) != 0) {
+                if (gfx[(x + xline + ((y + yline) * 64))] == 1) {
+                    V[0xF] = 1;
+                }
+                gfx[x + xline + ((y + yline) * 64)] ^= 1;
+            }
+        }
+    }
+
+    drawFlag = true;
+    pc += 2;
+}
+
+void Emulator::executeMiscOperation() {
+    executeOperation(miscOpfunctions, 0x00FF);
+}
+
+// 0x00E0: Clear the display
+void Emulator::clearDisplay() {
+    printInstruction("CLS");
+
+    for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
+        gfx[i] = 0x0;
+    }
+
+    pc += 2;
+}
+
+// 0x00EE: Return from subroutine
+void Emulator::returnFromSubroutine() {
+    printInstruction("RET");
+
+    pc = stack[--sp];
+}
+
+// 0x8XY0: Set Vx = Vy
+void Emulator::copyRegister() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "LD V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
+    printInstruction(instruction);
+
+    V[xRegisterIndex] = V[yRegisterIndex];
+
+    pc += 2;
+}
+
+// 0x8XY1: Bitwise OR (Vx = Vx | Vy)
+void Emulator::bitwiseOr() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction("OR V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false));
+    printInstruction(instruction);
+
+    V[xRegisterIndex] = V[xRegisterIndex] | V[yRegisterIndex];
+
+    pc += 2;
+}
+
+// 0x8XY4: Add value of register Y to register X
+void Emulator::addRegisters() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "ADD V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
+    printInstruction(instruction);
+
+    if (V[yRegisterIndex] > (0xFF - V[xRegisterIndex])) {
+        V[carryFlagIndex] = 1; // Set the carry flag
+    }
+    else {
+        V[carryFlagIndex] = 0;
+    }
+
+    V[xRegisterIndex] += V[yRegisterIndex];
+
+    pc += 2;
+}
+
+// 0xEX9E: Skip next instruction if key stored in V[X] is pressed
+void Emulator::skipInstructionIfKeyPressed() {
+    unsigned short index = (opcode & 0x0F00) >> 8;
+    printInstruction("SKP V" + utilities->hexToString(index, false));
+    
+    if (key[V[index]] != 0) {
+        pc += 4;
+    }
+    else {
+        pc += 2;
+    }
+}
+
+// 0xEXA1: Skip next instruction if key stored in V[X] is NOT pressed
+void Emulator::skipInstructionIfKeyNotPressed(){
+    unsigned short index = (opcode & 0x0F00) >> 8;
+    printInstruction("SKNP V" + utilities->hexToString(index, false));
+    
+    if (key[V[index]] == 0) {
+        pc += 4;
+    }
+    else {
+        pc += 2;
+    }
 }
 
 // 0xFX07: Set Vx = delay timer value
@@ -207,84 +311,6 @@ void Emulator::storeBinaryCodedDecimal() {
     pc += 2;
 }
 
-// 0xDXYN: Updating graphics buffer
-void Emulator::updateGraphicsBuffer() {
-    unsigned short xIndex = (opcode & 0x0F00) >> 8;
-    unsigned short yIndex = (opcode & 0x00F0) >> 4;
-    unsigned short x = V[xIndex];
-    unsigned short y = V[yIndex];
-    unsigned short height = opcode & 0x000F;
-    unsigned short pixel;
-
-    std::string instruction = "DRW V" + utilities->hexToString(xIndex, false) + ", V" + utilities->hexToString(yIndex, false) + ", " + utilities->hexToString(height);
-    printInstruction(instruction);
-    
-    V[0xF] = 0;
-    for (int yline = 0; yline < height; yline++) {
-        pixel = memory[I + yline];
-        for (int xline = 0; xline < 8; xline++) {
-            if ((pixel & (0x80 >> xline)) != 0) {
-                if (gfx[(x + xline + ((y + yline) * 64))] == 1) {
-                    V[0xF] = 1;
-                }
-                gfx[x + xline + ((y + yline) * 64)] ^= 1;
-            }
-        }
-    }
-
-    drawFlag = true;
-    pc += 2;
-}
-
-// 0x00E0: Clear the display
-void Emulator::clearDisplay() {
-    printInstruction("CLS");
-
-    for (int i = 0; i < DISPLAY_WIDTH * DISPLAY_HEIGHT; i++) {
-        gfx[i] = 0x0;
-    }
-
-    pc += 2;
-}
-
-// 0xEX9E: Skip next instruction if key stored in V[X] is pressed
-void Emulator::skipInstructionIfKeyPressed() {
-    unsigned short index = (opcode & 0x0F00) >> 8;
-    printInstruction("SKP V" + utilities->hexToString(index, false));
-    
-    if (key[V[index]] != 0) {
-        pc += 4;
-    }
-    else {
-        pc += 2;
-    }
-}
-
-// 0xEXA1: Skip next instruction if key stored in V[X] is NOT pressed
-void Emulator::skipInstructionIfKeyNotPressed(){
-    unsigned short index = (opcode & 0x0F00) >> 8;
-    printInstruction("SKNP V" + utilities->hexToString(index, false));
-    
-    if (key[V[index]] == 0) {
-        pc += 4;
-    }
-    else {
-        pc += 2;
-    }
-}
-
-void Emulator::executeSystemOperation() {
-    executeOperation(systemOpfunctions, 0x00FF);
-}
-
-void Emulator::executeRegisterOperation() {
-    executeOperation(registerOpfunctions, 0x000F);
-}
-
-void Emulator::executeMiscOperation() {
-    executeOperation(miscOpfunctions, 0x00FF);
-}
-
 void Emulator::executeOperation(void (Emulator::*opfunctions[])(), unsigned short mask) {
     unsigned short index = (opcode & mask);
 
@@ -325,6 +351,7 @@ Emulator::Emulator() {
     mainOpfunctions[0x2000] = &Emulator::callSubroutine;
     mainOpfunctions[0x3000] = &Emulator::skipIfEqual;
     mainOpfunctions[0x4000] = &Emulator::skipIfNotEqual;
+    mainOpfunctions[0x5000] = &Emulator::skipIfRegistersEqual;
     mainOpfunctions[0x6000] = &Emulator::loadRegister;
     mainOpfunctions[0x7000] = &Emulator::addByteToRegister;
     mainOpfunctions[0x8000] = &Emulator::executeRegisterOperation;
@@ -339,6 +366,7 @@ Emulator::Emulator() {
     systemOpfunctions[0xEE] = &Emulator::returnFromSubroutine;
     
     registerOpfunctions[0x0] = &Emulator::copyRegister;
+    registerOpfunctions[0x1] = &Emulator::bitwiseOr;
     registerOpfunctions[0x4] = &Emulator::addRegisters;
 
     miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;

@@ -79,35 +79,27 @@ class Emulator {
         void executeOperation(void (Emulator::*[])(), unsigned short);
 
         void executeSystemOperation();
+        void jumpToAddress();
+        void callSubroutine();
+        void skipIfEqual();
+        void skipIfNotEqual();
+        void skipIfRegistersEqual();
+        void loadRegister();
+        void addByteToRegister();
+        void executeRegisterOperation();
+        void skipIfRegistersNotEqual();
+        void setIndexRegister();
+        void randomAnd();
+        void updateGraphicsBuffer();
+        void executeMiscOperation();
 
         void clearDisplay();
         void returnFromSubroutine();
 
-        void jumpToAddress();
-
-        void callSubroutine();
-
-        void skipIfEqual();
-
-        void skipIfNotEqual();
-
-        void loadRegister();
-
-        void addByteToRegister();
-
-        void executeRegisterOperation();
         void copyRegister();
+        void bitwiseOr();
         void addRegisters();
 
-        void skipIfRegistersNotEqual();
-
-        void setIndexRegister();
-
-        void randomAnd();
-
-        void updateGraphicsBuffer();
-
-        void executeMiscOperation();
         void skipInstructionIfKeyPressed();
         void skipInstructionIfKeyNotPressed();
         void storeDelayTimer();
