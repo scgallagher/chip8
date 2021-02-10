@@ -7,28 +7,11 @@
 #include "debug_window.h"
 #include "utilities.h"
 #include <SDL2/SDL.h>
+#include <stdlib.h>
 
 Emulator emulator;
 
 Utilities utilities;
-
-void drawGraphics(){
-    std::cout << "Drawing graphics\n";
-
-    for (int y = 0; y < 32; y++) {
-        std::cout << "|";
-        for (int x = 0; x < 64; x++) {
-            if (emulator.gfx[x + y * 64] == 1) {
-                std::cout << "*";
-            }
-            else {
-                std::cout << " ";
-            }
-        }
-        std::cout << "|\n";
-    }
-    emulator.drawFlag = false;
-}
 
 void launchDebugWindow(int argc, char **argv) {
     auto app = Gtk::Application::create(argc, argv, "org.gtkmm.example");
@@ -74,20 +57,29 @@ void DebugWindow::on_button_clicked() {
     setStackLabels(emulator.stack);
     setVLabels(emulator.V);
 
-    if(emulator.drawFlag) {
-        //drawGraphics();
-    }
-
     emulator.setKeys();
 }
 
-unsigned char* getBlankScreen() {
-    int bufferSize = 64 * 32;
-    unsigned char* buffer = new unsigned char[bufferSize];
-    for (int i = 0; i < bufferSize; i++) {
-        buffer[i] = 0x0;
+Display* initializeDisplay() {
+    try {
+        Display* display = new Display();
+        display->initialize();
+
+        return display;
+    } 
+    catch (std::string error) {
+        std::cout << "ERROR: Unable to initialize display: " + error << std::endl;
+        exit(1);
     }
-    return buffer;
+}
+
+bool pollForQuitEvent(SDL_Event* event) {
+    while (SDL_PollEvent(event) != 0) {
+        if (event->type == SDL_QUIT) {
+            return true;
+        }
+    }
+    return false;
 }
 
 int main(int argc, char **argv) {
@@ -106,23 +98,11 @@ int main(int argc, char **argv) {
     
 	// debugWindowThread.join();
 
-    Display* display = new Display();
-    try {
-        display->initialize();
-    } // TODO: make this code throw a class instead of a string
-    catch (std::string error) {
-        std::cout << "ERROR: Unable to initialize display: " + error << std::endl;
-    }
+    Display* display = initializeDisplay();
 
     bool quit = false;
     SDL_Event* event = new SDL_Event();
     while (!quit) {
-        while (SDL_PollEvent(event) != 0) {
-            if (event->type == SDL_QUIT) {
-                quit = true;
-            }
-        }
-
         try {
             emulator.cycle();
             display->updateDisplay(emulator.gfx);
@@ -131,6 +111,8 @@ int main(int argc, char **argv) {
             std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
             return 1;
         }
+
+        quit = pollForQuitEvent(event);
     }
 
 	return 0;
