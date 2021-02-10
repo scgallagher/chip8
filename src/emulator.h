@@ -113,6 +113,8 @@ class Emulator {
         void setDelayTimer();
         void addToIndexPointer();
         void storeBinaryCodedDecimal();
+        void storeRegistersInRange();
+        void loadRegistersInRange();
 };
 
 #endif

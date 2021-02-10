@@ -403,6 +403,38 @@ void Emulator::storeBinaryCodedDecimal() {
     pc += 2;
 }
 
+// 0xFX55: Store registers V0 through Vx in memory, starting at address I
+void Emulator::storeRegistersInRange() {
+    unsigned char registerIndex = (opcode & 0x0F00) >> 8;
+    unsigned short address = I;
+
+    std::string instruction = "LD [I], V" + utilities->hexToString(registerIndex, false);
+    printInstruction(instruction);
+
+    for (int i = 0; i <= registerIndex; i++) {
+        memory[address] = V[i];
+        address++;
+    }
+
+    pc += 2;
+}
+
+// 0xFX65: Load registers V0 through Vx from memory, starting at address I
+void Emulator::loadRegistersInRange() {
+    unsigned char registerIndex = (opcode & 0x0F00) >> 8;
+    unsigned short address = I;
+
+    std::string instruction = "LD V" + utilities->hexToString(registerIndex, false) + ", [I]";
+    printInstruction(instruction);
+
+    for (int i = 0; i <= registerIndex; i++) {
+        V[i] = memory[address];
+        address++;
+    }
+
+    pc += 2;
+}
+
 void Emulator::executeOperation(void (Emulator::*opfunctions[])(), unsigned short mask) {
     unsigned short index = (opcode & mask);
 
@@ -473,6 +505,8 @@ Emulator::Emulator() {
     miscOpfunctions[0x15] = &Emulator::setDelayTimer;
     miscOpfunctions[0x1E] = &Emulator::addToIndexPointer;
     miscOpfunctions[0x33] = &Emulator::storeBinaryCodedDecimal;
+    miscOpfunctions[0x55] = &Emulator::storeRegistersInRange;
+    miscOpfunctions[0x65] = &Emulator::loadRegistersInRange;
 }
 
 void Emulator::clearRegisters() {
