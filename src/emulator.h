@@ -98,6 +98,7 @@ class Emulator {
 
         void copyRegister();
         void bitwiseOr();
+        void bitwiseAnd();
         void addRegisters();
 
         void skipInstructionIfKeyPressed();

@@ -220,6 +220,19 @@ void Emulator::bitwiseOr() {
     pc += 2;
 }
 
+// 0x8XY2: Bitwise AND (Vx = Vx & Vy)
+void Emulator::bitwiseAnd() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction("AND V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false));
+    printInstruction(instruction);
+
+    V[xRegisterIndex] = V[xRegisterIndex] & V[yRegisterIndex];
+
+    pc += 2;
+}
+
 // 0x8XY4: Add value of register Y to register X
 void Emulator::addRegisters() {
     int xRegisterIndex = (opcode & 0x0F00) >> 8;
@@ -367,6 +380,7 @@ Emulator::Emulator() {
     
     registerOpfunctions[0x0] = &Emulator::copyRegister;
     registerOpfunctions[0x1] = &Emulator::bitwiseOr;
+    registerOpfunctions[0x2] = &Emulator::bitwiseAnd;
     registerOpfunctions[0x4] = &Emulator::addRegisters;
 
     miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
