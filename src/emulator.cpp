@@ -14,6 +14,11 @@ void initializeInput(){
     // Todo
 }
 
+void Emulator::pressKey(unsigned short keyCodePressed) {
+    this->isKeyPressed = true;
+    this->keyCodePressed = keyCodePressed;
+}
+
 void Emulator::printInstruction(std::string instruction) {
     std::cout << utilities->hexToString(pc) << ": " << utilities->opcodeToString(opcode) << " " << instruction << std::endl;
 }

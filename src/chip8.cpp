@@ -73,22 +73,25 @@ Display* initializeDisplay() {
     }
 }
 
+void processKeyDown(SDL_Event* event) {
+    int keyPressed = event->key.keysym.sym;
+            
+    auto keyCode = emulator.keyMap.find(keyPressed);
+    if (keyCode != emulator.keyMap.end()) {
+        emulator.pressKey(keyCode->first);
+    }
+    else {
+        std::cout << "WARNING: Key press not recognized: " << keyPressed << std::endl;
+    }
+}
+
 bool pollForQuitEvent(SDL_Event* event) {
     while (SDL_PollEvent(event) != 0) {
         if (event->type == SDL_QUIT) {
             return true;
         }
         else if (event->type == SDL_KEYDOWN) {
-            int keyPressed = event->key.keysym.sym;
-            
-            auto keyCode = emulator.keyMap.find(keyPressed);
-            if (keyCode != emulator.keyMap.end()) {
-                emulator.isKeyPressed = true;
-                emulator.keyCodePressed = keyCode->first;
-            }
-            else {
-                std::cout << "WARNING: Key press not recognized: " << keyPressed << std::endl;
-            }
+            processKeyDown(event);
         }
     }
     return false;

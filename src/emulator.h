@@ -84,14 +84,12 @@ class Emulator {
             {SDLK_f, 0xF},
         };
 
-        // Hacky message passing for key down event
-        bool isKeyPressed;
-        unsigned short keyCodePressed;
-
         void (Emulator::*systemOpfunctions[0xEE + 1])();
         void (Emulator::*mainOpfunctions[0xF085 + 1])();
         void (Emulator::*registerOpfunctions[0xE + 1])();
         void (Emulator::*miscOpfunctions[0xA1 + 1])();
+
+        void pressKey(unsigned short);
 
     private:
         Utilities *utilities;
@@ -99,6 +97,10 @@ class Emulator {
         unsigned char carryFlagIndex;
 
         bool includeVyInShift;
+
+        // Hacky message passing for key down event
+        bool isKeyPressed;
+        unsigned short keyCodePressed;
 
         void clearRegisters();
         void printInstruction(std::string);
