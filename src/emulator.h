@@ -3,6 +3,8 @@
 
 #include <string>
 #include "utilities.h"
+#include <map>
+#include <SDL2/SDL.h>
 
 void initializeGraphics();
 
@@ -63,6 +65,29 @@ class Emulator {
             0xF0, 0x80, 0xF0, 0x80, 0x80  // F
         };
 
+        std::map<int, unsigned short> keyMap = {
+            {SDLK_0, 0x0},
+            {SDLK_1, 0x1},
+            {SDLK_2, 0x2},
+            {SDLK_3, 0x3},
+            {SDLK_4, 0x4},
+            {SDLK_5, 0x5},
+            {SDLK_6, 0x6},
+            {SDLK_7, 0x7},
+            {SDLK_8, 0x8},
+            {SDLK_9, 0x9},
+            {SDLK_a, 0xA},
+            {SDLK_b, 0xB},
+            {SDLK_c, 0xC},
+            {SDLK_d, 0xD},
+            {SDLK_e, 0xE},
+            {SDLK_f, 0xF},
+        };
+
+        // Hacky message passing for key down event
+        bool isKeyPressed;
+        unsigned short keyCodePressed;
+
         void (Emulator::*systemOpfunctions[0xEE + 1])();
         void (Emulator::*mainOpfunctions[0xF085 + 1])();
         void (Emulator::*registerOpfunctions[0xE + 1])();
@@ -106,6 +131,7 @@ class Emulator {
         void subtractRegisters();
         void shiftRight();
         void shiftLeft();
+        void pointToSprite();
 
         void skipInstructionIfKeyPressed();
         void skipInstructionIfKeyNotPressed();
@@ -115,6 +141,7 @@ class Emulator {
         void storeBinaryCodedDecimal();
         void storeRegistersInRange();
         void loadRegistersInRange();
+        void waitForKeyPress();
 };
 
 #endif

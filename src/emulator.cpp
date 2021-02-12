@@ -391,6 +391,18 @@ void Emulator::addToIndexPointer() {
     pc += 2;
 }
 
+// 0xFX29: Set I = location of sprite for digit Vx
+void Emulator::pointToSprite() {
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("LD F, V" + utilities->hexToString(registerIndex, false));
+
+    unsigned short spriteOffset = 5;
+    I = V[registerIndex] * spriteOffset;
+
+    pc += 2;
+}
+
 // 0xFX33: Store binary-coded decimal representation of VX
 void Emulator::storeBinaryCodedDecimal() {
     unsigned short vIndex = (opcode & 0x0F00) >> 8;
@@ -433,6 +445,20 @@ void Emulator::loadRegistersInRange() {
     }
 
     pc += 2;
+}
+
+// 0xFX0A: Wait for key press, store value of the key in Vx
+void Emulator::waitForKeyPress() {
+    unsigned char registerIndex = (opcode & 0x0F00) >> 8;
+    
+    std::string instruction = "LD V" + utilities->hexToString(registerIndex, false) + ", K";
+    printInstruction(instruction);
+
+    if (isKeyPressed) {
+        V[registerIndex] = keyCodePressed;
+        isKeyPressed = false;
+        pc += 2;
+    }
 }
 
 void Emulator::executeOperation(void (Emulator::*opfunctions[])(), unsigned short mask) {
@@ -504,9 +530,11 @@ Emulator::Emulator() {
     miscOpfunctions[0x07] = &Emulator::storeDelayTimer;
     miscOpfunctions[0x15] = &Emulator::setDelayTimer;
     miscOpfunctions[0x1E] = &Emulator::addToIndexPointer;
+    miscOpfunctions[0x29] = &Emulator::pointToSprite;
     miscOpfunctions[0x33] = &Emulator::storeBinaryCodedDecimal;
     miscOpfunctions[0x55] = &Emulator::storeRegistersInRange;
     miscOpfunctions[0x65] = &Emulator::loadRegistersInRange;
+    miscOpfunctions[0x0A] = &Emulator::waitForKeyPress;
 }
 
 void Emulator::clearRegisters() {
@@ -530,6 +558,8 @@ void Emulator::initialize() {
     for (int i = 0; i < 80; ++i) {
         memory[i] = chip8_fontset[i];
     }
+
+    isKeyPressed = false;
 
     // Reset timers
 }

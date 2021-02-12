@@ -78,6 +78,18 @@ bool pollForQuitEvent(SDL_Event* event) {
         if (event->type == SDL_QUIT) {
             return true;
         }
+        else if (event->type == SDL_KEYDOWN) {
+            int keyPressed = event->key.keysym.sym;
+            
+            auto keyCode = emulator.keyMap.find(keyPressed);
+            if (keyCode != emulator.keyMap.end()) {
+                emulator.isKeyPressed = true;
+                emulator.keyCodePressed = keyCode->first;
+            }
+            else {
+                std::cout << "WARNING: Key press not recognized: " << keyPressed << std::endl;
+            }
+        }
     }
     return false;
 }
@@ -94,9 +106,9 @@ int main(int argc, char **argv) {
     }
     emulator.loadProgram(romFilePath);
 
-	// std::thread debugWindowThread(launchDebugWindow, argc, argv);
+	// // std::thread debugWindowThread(launchDebugWindow, argc, argv);
     
-	// debugWindowThread.join();
+	// // debugWindowThread.join();
 
     Display* display = initializeDisplay();
 
