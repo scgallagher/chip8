@@ -133,17 +133,17 @@ class Emulator {
         void subtractRegisters();
         void shiftRight();
         void shiftLeft();
-        void pointToSprite();
 
-        void skipInstructionIfKeyPressed();
-        void skipInstructionIfKeyNotPressed();
         void storeDelayTimer();
+        void waitForKeyPress();
         void setDelayTimer();
         void addToIndexPointer();
+        void pointToSprite();
         void storeBinaryCodedDecimal();
         void storeRegistersInRange();
         void loadRegistersInRange();
-        void waitForKeyPress();
+        void skipInstructionIfKeyPressed();
+        void skipInstructionIfKeyNotPressed();
 };
 
 #endif

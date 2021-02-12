@@ -337,32 +337,6 @@ void Emulator::shiftLeft() {
     pc += 2;
 }
 
-// 0xEX9E: Skip next instruction if key stored in V[X] is pressed
-void Emulator::skipInstructionIfKeyPressed() {
-    unsigned short index = (opcode & 0x0F00) >> 8;
-    printInstruction("SKP V" + utilities->hexToString(index, false));
-    
-    if (key[V[index]] != 0) {
-        pc += 4;
-    }
-    else {
-        pc += 2;
-    }
-}
-
-// 0xEXA1: Skip next instruction if key stored in V[X] is NOT pressed
-void Emulator::skipInstructionIfKeyNotPressed(){
-    unsigned short index = (opcode & 0x0F00) >> 8;
-    printInstruction("SKNP V" + utilities->hexToString(index, false));
-    
-    if (key[V[index]] == 0) {
-        pc += 4;
-    }
-    else {
-        pc += 2;
-    }
-}
-
 // 0xFX07: Set Vx = delay timer value
 void Emulator::storeDelayTimer() {
     unsigned short registerIndex = (opcode & 0x0F00) >> 8;
@@ -372,6 +346,20 @@ void Emulator::storeDelayTimer() {
     V[registerIndex] = delay_timer;
 
     pc += 2;
+}
+
+// 0xFX0A: Wait for key press, store value of the key in Vx
+void Emulator::waitForKeyPress() {
+    unsigned char registerIndex = (opcode & 0x0F00) >> 8;
+    
+    std::string instruction = "LD V" + utilities->hexToString(registerIndex, false) + ", K";
+    printInstruction(instruction);
+
+    if (isKeyPressed) {
+        V[registerIndex] = keyCodePressed;
+        isKeyPressed = false;
+        pc += 2;
+    }
 }
 
 // 0xFX15: Set delay timer = Vx
@@ -452,16 +440,28 @@ void Emulator::loadRegistersInRange() {
     pc += 2;
 }
 
-// 0xFX0A: Wait for key press, store value of the key in Vx
-void Emulator::waitForKeyPress() {
-    unsigned char registerIndex = (opcode & 0x0F00) >> 8;
+// 0xEX9E: Skip next instruction if key stored in V[X] is pressed
+void Emulator::skipInstructionIfKeyPressed() {
+    unsigned short index = (opcode & 0x0F00) >> 8;
+    printInstruction("SKP V" + utilities->hexToString(index, false));
     
-    std::string instruction = "LD V" + utilities->hexToString(registerIndex, false) + ", K";
-    printInstruction(instruction);
+    if (key[V[index]] != 0) {
+        pc += 4;
+    }
+    else {
+        pc += 2;
+    }
+}
 
-    if (isKeyPressed) {
-        V[registerIndex] = keyCodePressed;
-        isKeyPressed = false;
+// 0xEXA1: Skip next instruction if key stored in V[X] is NOT pressed
+void Emulator::skipInstructionIfKeyNotPressed(){
+    unsigned short index = (opcode & 0x0F00) >> 8;
+    printInstruction("SKNP V" + utilities->hexToString(index, false));
+    
+    if (key[V[index]] == 0) {
+        pc += 4;
+    }
+    else {
         pc += 2;
     }
 }
@@ -513,11 +513,13 @@ Emulator::Emulator() {
     mainOpfunctions[0x8000] = &Emulator::executeRegisterOperation;
     mainOpfunctions[0x9000] = &Emulator::skipIfRegistersNotEqual;
     mainOpfunctions[0xA000] = &Emulator::setIndexRegister;
+    // Bnnn - JP V0, addr
     mainOpfunctions[0xC000] = &Emulator::randomAnd;
     mainOpfunctions[0xD000] = &Emulator::updateGraphicsBuffer;
     mainOpfunctions[0xE000] = &Emulator::executeMiscOperation;
     mainOpfunctions[0xF000] = &Emulator::executeMiscOperation;
 
+    // 0nnn - SYS addr (Optional, ignored by most modern interpreters)
     systemOpfunctions[0xE0] = &Emulator::clearDisplay;
     systemOpfunctions[0xEE] = &Emulator::returnFromSubroutine;
     
@@ -528,18 +530,20 @@ Emulator::Emulator() {
     registerOpfunctions[0x4] = &Emulator::addRegisters;
     registerOpfunctions[0x5] = &Emulator::subtractRegisters;
     registerOpfunctions[0x6] = &Emulator::shiftRight;
+    // 8xy7 - SUBN Vx, Vy
     registerOpfunctions[0xE] = &Emulator::shiftLeft;
 
-    miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
-    miscOpfunctions[0xA1] = &Emulator::skipInstructionIfKeyNotPressed;
     miscOpfunctions[0x07] = &Emulator::storeDelayTimer;
+    miscOpfunctions[0x0A] = &Emulator::waitForKeyPress;
     miscOpfunctions[0x15] = &Emulator::setDelayTimer;
+    // Fx18 - LD ST, Vx
     miscOpfunctions[0x1E] = &Emulator::addToIndexPointer;
     miscOpfunctions[0x29] = &Emulator::pointToSprite;
     miscOpfunctions[0x33] = &Emulator::storeBinaryCodedDecimal;
     miscOpfunctions[0x55] = &Emulator::storeRegistersInRange;
     miscOpfunctions[0x65] = &Emulator::loadRegistersInRange;
-    miscOpfunctions[0x0A] = &Emulator::waitForKeyPress;
+    miscOpfunctions[0x9E] = &Emulator::skipInstructionIfKeyPressed;
+    miscOpfunctions[0xA1] = &Emulator::skipInstructionIfKeyNotPressed;
 }
 
 void Emulator::clearRegisters() {
