@@ -3,3 +3,4 @@
 *.obj
 .vscode/**
 chip8
+build/**
