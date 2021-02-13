@@ -260,7 +260,7 @@ void Emulator::addRegisters() {
     printInstruction(instruction);
 
     if (V[yRegisterIndex] > (0xFF - V[xRegisterIndex])) {
-        V[carryFlagIndex] = 1; // Set the carry flag
+        V[carryFlagIndex] = 1;
     }
     else {
         V[carryFlagIndex] = 0;
@@ -279,11 +279,11 @@ void Emulator::subtractRegisters() {
     std::string instruction =  "SUB V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
     printInstruction(instruction);
 
-    if (V[yRegisterIndex] > (0xFF - V[xRegisterIndex])) {
-        V[carryFlagIndex] = 1; // Set the carry flag
+    if (V[yRegisterIndex] > V[xRegisterIndex]) {
+        V[carryFlagIndex] = 0;
     }
     else {
-        V[carryFlagIndex] = 0;
+        V[carryFlagIndex] = 1;
     }
 
     V[xRegisterIndex] -= V[yRegisterIndex];
@@ -310,6 +310,26 @@ void Emulator::shiftRight() {
     }
 
     V[xRegisterIndex] = V[xRegisterIndex] >> 1;
+
+    pc += 2;
+}
+
+// 0x8XY7: Subtract value of register X from register Y
+void Emulator::subtractRegistersReversed() {
+    int xRegisterIndex = (opcode & 0x0F00) >> 8;
+    int yRegisterIndex = (opcode & 0x00F0) >> 4;
+
+    std::string instruction =  "SUBN V" + utilities->hexToString(yRegisterIndex, false) + ", V" + utilities->hexToString(xRegisterIndex, false);
+    printInstruction(instruction);
+
+    if (V[xRegisterIndex] > V[yRegisterIndex]) {
+        V[carryFlagIndex] = 1;
+    }
+    else {
+        V[carryFlagIndex] = 0;
+    }
+
+    V[xRegisterIndex] = V[yRegisterIndex] - V[xRegisterIndex];
 
     pc += 2;
 }
@@ -530,7 +550,7 @@ Emulator::Emulator() {
     registerOpfunctions[0x4] = &Emulator::addRegisters;
     registerOpfunctions[0x5] = &Emulator::subtractRegisters;
     registerOpfunctions[0x6] = &Emulator::shiftRight;
-    // 8xy7 - SUBN Vx, Vy
+    registerOpfunctions[0x7] = &Emulator::subtractRegistersReversed;
     registerOpfunctions[0xE] = &Emulator::shiftLeft;
 
     miscOpfunctions[0x07] = &Emulator::storeDelayTimer;

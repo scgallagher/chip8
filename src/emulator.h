@@ -132,6 +132,7 @@ class Emulator {
         void addRegisters();
         void subtractRegisters();
         void shiftRight();
+        void subtractRegistersReversed();
         void shiftLeft();
 
         void storeDelayTimer();
