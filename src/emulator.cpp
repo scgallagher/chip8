@@ -407,6 +407,17 @@ void Emulator::setDelayTimer() {
     pc += 2;
 }
 
+// 0xFX18: Set sound timer = Vx
+void Emulator::setSoundTimer() {
+    unsigned short registerIndex = (opcode & 0x0F00) >> 8;
+
+    printInstruction("LD ST, V" + utilities->hexToString(registerIndex, false));
+
+    sound_timer = V[registerIndex];
+
+    pc += 2;
+}
+
 // 0xFX1E: Set I = I + Vx
 void Emulator::addToIndexPointer() {
     unsigned short registerIndex = (opcode & 0x0F00) >> 8;
@@ -523,9 +534,7 @@ void Emulator::cycle() {
         --delay_timer;
     }
     if (sound_timer > 0) {
-        if (sound_timer == 1) {
-            std::cout << "BEEP\n";
-        }
+        std::cout << "BEEP\n";
         --sound_timer;
     }
 }
@@ -571,6 +580,7 @@ Emulator::Emulator() {
     miscOpfunctions[0x0A] = &Emulator::waitForKeyPress;
     miscOpfunctions[0x15] = &Emulator::setDelayTimer;
     // Fx18 - LD ST, Vx
+    miscOpfunctions[0x18] = &Emulator::setSoundTimer;
     miscOpfunctions[0x1E] = &Emulator::addToIndexPointer;
     miscOpfunctions[0x29] = &Emulator::pointToSprite;
     miscOpfunctions[0x33] = &Emulator::storeBinaryCodedDecimal;

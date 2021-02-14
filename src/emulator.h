@@ -139,6 +139,7 @@ class Emulator {
         void storeDelayTimer();
         void waitForKeyPress();
         void setDelayTimer();
+        void setSoundTimer();
         void addToIndexPointer();
         void pointToSprite();
         void storeBinaryCodedDecimal();
