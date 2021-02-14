@@ -135,6 +135,15 @@ void Emulator::setIndexRegister() {
     pc += 2;
 }
 
+// 0xBNNN: Jump to location NNN + V0
+void Emulator::jumpToAddressPlusOffset() {
+    unsigned short address = opcode & 0x0FFF;
+
+    printInstruction("JP V0, " + utilities->hexToString(address));
+
+    pc = address + V[0];
+}
+
 // 0xCXKK: Set Vx = random byte AND kk
 void Emulator::randomAnd() {
     unsigned short value = opcode & 0x00FF;
@@ -538,7 +547,7 @@ Emulator::Emulator() {
     mainOpfunctions[0x8000] = &Emulator::executeRegisterOperation;
     mainOpfunctions[0x9000] = &Emulator::skipIfRegistersNotEqual;
     mainOpfunctions[0xA000] = &Emulator::setIndexRegister;
-    // Bnnn - JP V0, addr
+    mainOpfunctions[0xB000] = &Emulator::jumpToAddressPlusOffset;
     mainOpfunctions[0xC000] = &Emulator::randomAnd;
     mainOpfunctions[0xD000] = &Emulator::updateGraphicsBuffer;
     mainOpfunctions[0xE000] = &Emulator::executeMiscOperation;

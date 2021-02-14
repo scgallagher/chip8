@@ -118,6 +118,7 @@ class Emulator {
         void executeRegisterOperation();
         void skipIfRegistersNotEqual();
         void setIndexRegister();
+        void jumpToAddressPlusOffset();
         void randomAnd();
         void updateGraphicsBuffer();
         void executeMiscOperation();
