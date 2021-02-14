@@ -103,32 +103,32 @@ int main(int argc, char **argv) {
 
     emulator.initialize();
 
-    std::string romFilePath = "roms/IBM_LOGO";
+    std::string romFilePath = "roms/c8_test.c8";
     if (argc > 1) {
         romFilePath = argv[1];
     }
     emulator.loadProgram(romFilePath);
 
-	std::thread debugWindowThread(launchDebugWindow, argc, argv);
+	// std::thread debugWindowThread(launchDebugWindow, argc, argv);
     
-	debugWindowThread.join();
+	// debugWindowThread.join();
 
-    // Display* display = initializeDisplay();
+    Display* display = initializeDisplay();
 
-    // bool quit = false;
-    // SDL_Event* event = new SDL_Event();
-    // while (!quit) {
-    //     try {
-    //         emulator.cycle();
-    //         display->updateDisplay(emulator.gfx);
-    //     }
-    //     catch (std:: string opcode) {
-    //         std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-    //         return 1;
-    //     }
+    bool quit = false;
+    SDL_Event* event = new SDL_Event();
+    while (!quit) {
+        try {
+            emulator.cycle();
+            display->updateDisplay(emulator.gfx);
+        }
+        catch (std:: string opcode) {
+            std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+            return 1;
+        }
 
-    //     quit = pollForQuitEvent(event);
-    // }
+        quit = pollForQuitEvent(event);
+    }
 
 	return 0;
 }

@@ -326,7 +326,7 @@ void Emulator::subtractRegistersReversed() {
         V[carryFlagIndex] = 1;
     }
     else {
-        V[carryFlagIndex] = 2;
+        V[carryFlagIndex] = 0;
     }
 
     V[xRegisterIndex] = V[yRegisterIndex] - V[xRegisterIndex];
@@ -350,6 +350,9 @@ void Emulator::shiftLeft() {
 
     if ((V[xRegisterIndex] >> 7) == 1) {
         V[carryFlagIndex] = 1;
+    }
+    else {
+        V[carryFlagIndex] = 0;
     }
 
     V[xRegisterIndex] = V[xRegisterIndex] << 1;
