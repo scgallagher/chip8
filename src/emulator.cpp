@@ -279,11 +279,11 @@ void Emulator::subtractRegisters() {
     std::string instruction =  "SUB V" + utilities->hexToString(xRegisterIndex, false) + ", V" + utilities->hexToString(yRegisterIndex, false);
     printInstruction(instruction);
 
-    if (V[yRegisterIndex] > V[xRegisterIndex]) {
-        V[carryFlagIndex] = 0;
+    if (V[xRegisterIndex] > V[yRegisterIndex]) {
+        V[carryFlagIndex] = 1;
     }
     else {
-        V[carryFlagIndex] = 1;
+        V[carryFlagIndex] = 0;
     }
 
     V[xRegisterIndex] -= V[yRegisterIndex];
@@ -322,11 +322,11 @@ void Emulator::subtractRegistersReversed() {
     std::string instruction =  "SUBN V" + utilities->hexToString(yRegisterIndex, false) + ", V" + utilities->hexToString(xRegisterIndex, false);
     printInstruction(instruction);
 
-    if (V[xRegisterIndex] > V[yRegisterIndex]) {
+    if (V[yRegisterIndex] > V[xRegisterIndex]) {
         V[carryFlagIndex] = 1;
     }
     else {
-        V[carryFlagIndex] = 0;
+        V[carryFlagIndex] = 2;
     }
 
     V[xRegisterIndex] = V[yRegisterIndex] - V[xRegisterIndex];
@@ -353,6 +353,8 @@ void Emulator::shiftLeft() {
     }
 
     V[xRegisterIndex] = V[xRegisterIndex] << 1;
+
+    std::cout << "Result: " << utilities->hexToString(V[xRegisterIndex]) << std::endl;
 
     pc += 2;
 }
