@@ -562,7 +562,6 @@ Emulator::Emulator() {
     mainOpfunctions[0xE000] = &Emulator::executeMiscOperation;
     mainOpfunctions[0xF000] = &Emulator::executeMiscOperation;
 
-    // 0nnn - SYS addr (Optional, ignored by most modern interpreters)
     systemOpfunctions[0xE0] = &Emulator::clearDisplay;
     systemOpfunctions[0xEE] = &Emulator::returnFromSubroutine;
     
@@ -579,7 +578,6 @@ Emulator::Emulator() {
     miscOpfunctions[0x07] = &Emulator::storeDelayTimer;
     miscOpfunctions[0x0A] = &Emulator::waitForKeyPress;
     miscOpfunctions[0x15] = &Emulator::setDelayTimer;
-    // Fx18 - LD ST, Vx
     miscOpfunctions[0x18] = &Emulator::setSoundTimer;
     miscOpfunctions[0x1E] = &Emulator::addToIndexPointer;
     miscOpfunctions[0x29] = &Emulator::pointToSprite;
