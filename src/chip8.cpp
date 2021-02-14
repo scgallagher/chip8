@@ -7,6 +7,7 @@
 #include "debug_window.h"
 #include "utilities.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdlib.h>
 
 Emulator emulator;
@@ -121,6 +122,10 @@ int main(int argc, char **argv) {
         try {
             emulator.cycle();
             display->updateDisplay(emulator.gfx);
+
+            if (emulator.isSoundTimerActive()) {
+                Mix_PlayChannel(-1, display->beep, 0);
+            }
         }
         catch (std:: string opcode) {
             std::cout << "ERROR: Unknown opcode " << opcode << std::endl;

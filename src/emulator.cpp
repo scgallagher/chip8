@@ -19,6 +19,10 @@ void Emulator::pressKey(unsigned short keyCodePressed) {
     this->keyCodePressed = keyCodePressed;
 }
 
+bool Emulator::isSoundTimerActive() {
+    return sound_timer > 0;
+}
+
 void Emulator::printInstruction(std::string instruction) {
     std::cout << utilities->hexToString(pc) << ": " << utilities->opcodeToString(opcode) << " " << instruction << std::endl;
 }
@@ -534,7 +538,6 @@ void Emulator::cycle() {
         --delay_timer;
     }
     if (sound_timer > 0) {
-        std::cout << "BEEP\n";
         --sound_timer;
     }
 }

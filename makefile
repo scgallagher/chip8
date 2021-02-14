@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = --std=c++11
 GTK_INCLUDE = `pkg-config gtkmm-3.0 --cflags --libs`
-SDL_INCLUDE = -lSDL2
+SDL_INCLUDE = -lSDL2 -lSDL2_mixer
 SOURCE_DIR = src
 BUILD_DIR = build
 

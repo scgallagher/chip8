@@ -2,6 +2,7 @@
 #define DISPLAY_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 
 class Display {
     public:
@@ -11,6 +12,8 @@ class Display {
         SDL_Window* window;
         SDL_Surface* screenSurface;
         SDL_Surface* imageSurface;
+
+        Mix_Chunk *beep;
 
         Display();
         virtual ~Display();

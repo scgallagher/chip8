@@ -90,6 +90,7 @@ class Emulator {
         void (Emulator::*miscOpfunctions[0xA1 + 1])();
 
         void pressKey(unsigned short);
+        bool isSoundTimerActive();
 
     private:
         Utilities *utilities;

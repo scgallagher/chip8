@@ -1,5 +1,6 @@
 #include "display.h"
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <iostream>
 
 Display::Display() {
@@ -11,11 +12,23 @@ Display::Display() {
 }
 
 void Display::initialize() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::string error = "Could not initialize SDL. SDL_Error: " + std::string(SDL_GetError());
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO ) < 0) {
+        std::string error = "Could not initialize. SDL_Error: " + std::string(SDL_GetError());
         throw error;
     }
     else {
+        if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0 ) {
+            std::string error = "SDL_mixer could not initialize! SDL_mixer Error:" + std::string(Mix_GetError());
+            throw error;
+        }
+
+        beep = Mix_LoadWAV("resources/beep.wav");
+        if(beep == NULL)
+        {
+            std::string error = "Failed to load sound! SDL_mixer Error:" + std::string(Mix_GetError());
+            throw error;
+        }
+
         window = SDL_CreateWindow("Chip8", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
         if (window == NULL) {
             std::string error = "Could not create window. SDL_Error: " + std::string(SDL_GetError());
@@ -111,5 +124,9 @@ Display::~Display() {
     SDL_DestroyWindow(window);
     window = NULL;
 
+    Mix_FreeChunk(beep);
+    beep = NULL;
+
+    Mix_Quit();
     SDL_Quit();
 }
