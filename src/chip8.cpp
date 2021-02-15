@@ -14,6 +14,10 @@ Emulator emulator;
 
 Utilities utilities;
 
+Display* display;
+
+SDL_Event* event;
+
 void launchDebugWindow(int argc, char **argv) {
     auto app = Gtk::Application::create(argc, argv, "chip8");
 
@@ -48,17 +52,27 @@ void DebugWindow::setVLabels(unsigned char *V) {
 }
 
 void DebugWindow::on_button_clicked() {
-    emulator.cycle();
+    try {
+        emulator.cycle();
 
-    setProgramCounterLabel(utilities.hexToString(emulator.pc));
-    setIndexLabel(utilities.hexToString(emulator.I));
-    setStackPointerLabel(utilities.hexToString(emulator.sp));
-    setDelayTimerLabel(utilities.hexToString(emulator.delay_timer));
-    setSoundTimerLabel(utilities.hexToString(emulator.sound_timer));
-    setStackLabels(emulator.stack);
-    setVLabels(emulator.V);
+        setProgramCounterLabel(utilities.hexToString(emulator.pc));
+        setIndexLabel(utilities.hexToString(emulator.I));
+        setStackPointerLabel(utilities.hexToString(emulator.sp));
+        setDelayTimerLabel(utilities.hexToString(emulator.delay_timer));
+        setSoundTimerLabel(utilities.hexToString(emulator.sound_timer));
+        setStackLabels(emulator.stack);
+        setVLabels(emulator.V);
 
-    emulator.setKeys();
+        display->updateDisplay(emulator.gfx);
+
+        if (emulator.isSoundTimerActive()) {
+            Mix_PlayChannel(-1, display->beep, 0);
+        }
+    }
+    catch (std:: string opcode) {
+        std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
+        exit(1);
+    }
 }
 
 Display* initializeDisplay() {
@@ -79,14 +93,14 @@ void processKeyDown(SDL_Event* event) {
             
     auto keyCode = emulator.keyMap.find(keyPressed);
     if (keyCode != emulator.keyMap.end()) {
-        emulator.pressKey(keyCode->first);
+        emulator.pressKey(keyCode->second);
     }
     else {
         std::cout << "WARNING: Key press not recognized: " << keyPressed << std::endl;
     }
 }
 
-bool pollForQuitEvent(SDL_Event* event) {
+bool pollForQuitEvent() {
     while (SDL_PollEvent(event) != 0) {
         if (event->type == SDL_QUIT) {
             return true;
@@ -98,26 +112,8 @@ bool pollForQuitEvent(SDL_Event* event) {
     return false;
 }
 
-int main(int argc, char **argv) {
-    initializeGraphics();
-    initializeInput();
-
-    emulator.initialize();
-
-    std::string romFilePath = "roms/c8_test.c8";
-    if (argc > 1) {
-        romFilePath = argv[1];
-    }
-    emulator.loadProgram(romFilePath);
-
-	// std::thread debugWindowThread(launchDebugWindow, argc, argv);
-    
-	// debugWindowThread.join();
-
-    Display* display = initializeDisplay();
-
+void runEmulator() {
     bool quit = false;
-    SDL_Event* event = new SDL_Event();
     while (!quit) {
         try {
             emulator.cycle();
@@ -129,10 +125,36 @@ int main(int argc, char **argv) {
         }
         catch (std:: string opcode) {
             std::cout << "ERROR: Unknown opcode " << opcode << std::endl;
-            return 1;
+            exit(1);
         }
 
-        quit = pollForQuitEvent(event);
+        quit = pollForQuitEvent();
+    }
+}
+
+int main(int argc, char **argv) {
+    bool isDebugMode = false;
+
+    initializeGraphics();
+    initializeInput();
+
+    emulator.initialize();
+
+    display = initializeDisplay();
+    event = new SDL_Event();
+
+    std::string romFilePath = "roms/TETRIS";
+    if (argc > 1) {
+        romFilePath = argv[1];
+    }
+    emulator.loadProgram(romFilePath);
+
+    if (isDebugMode) {
+        std::thread debugWindowThread(launchDebugWindow, argc, argv);
+	    debugWindowThread.join();
+    }
+    else {
+        runEmulator();
     }
 
 	return 0;

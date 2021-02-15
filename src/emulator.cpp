@@ -15,6 +15,8 @@ void initializeInput(){
 }
 
 void Emulator::pressKey(unsigned short keyCodePressed) {
+    key[keyCodePressed] = 1;
+
     this->isKeyPressed = true;
     this->keyCodePressed = keyCodePressed;
 }
@@ -494,7 +496,9 @@ void Emulator::skipInstructionIfKeyPressed() {
     unsigned short index = (opcode & 0x0F00) >> 8;
     printInstruction("SKP V" + utilities->hexToString(index, false));
     
-    if (key[V[index]] != 0) {
+    unsigned short keyCode = V[index];
+    if (key[keyCode] != 0) {
+        key[keyCode] = 0;
         pc += 4;
     }
     else {
@@ -507,10 +511,12 @@ void Emulator::skipInstructionIfKeyNotPressed(){
     unsigned short index = (opcode & 0x0F00) >> 8;
     printInstruction("SKNP V" + utilities->hexToString(index, false));
     
-    if (key[V[index]] == 0) {
+    unsigned short keyCode = V[index];
+    if (key[keyCode] == 0) {
         pc += 4;
     }
     else {
+        key[keyCode] = 0;
         pc += 2;
     }
 }
@@ -540,6 +546,8 @@ void Emulator::cycle() {
     if (sound_timer > 0) {
         --sound_timer;
     }
+
+    setKeys();
 }
 
 Emulator::Emulator() {
